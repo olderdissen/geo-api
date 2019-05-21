@@ -589,7 +589,7 @@ if(preg_match("/api\/(\d*)\/(\d*)\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 
 		if(isset($_GET["dirty"]) === true)
 			{
-			exec("sudo php tile.php " . $z . " " . $x . " " . $y . " > /dev/null &");
+			exec("sudo php geo-tile.php " . $z . " " . $x . " " . $y . " > /dev/null &");
 			}
 
 		################################################################################
@@ -1679,7 +1679,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 
 		if($got_pos === true)
 			{
-			exec("sudo php tile.php " . $id . " > /dev/null &");
+			exec("sudo php geo-tile.php " . $id . " > /dev/null &");
 			}
 		}
 	}
