@@ -1,12 +1,12 @@
 <?
-define("OSM_HOST", "0.0.0.0");
+define("OSM_HOST", "192.168.147.164");
 define("OSM_PORT", "3306");
-define("OSM_USER", "xxx");
-define("OSM_PASS", "xxx");
+define("OSM_USER", "root");
+define("OSM_PASS", "34096");
 define("OSM_NAME", "osm");
 
 define("OSM_VERSION", 0.6);
-define("OSM_GENERATOR", "geo.localhost");
+define("OSM_GENERATOR", "geo.olderdissen.ro");
 
 define("OSM_VERSION_MINIMUM", 0.6);
 define("OSM_VERSION_MAXIMUM", 0.6);
@@ -50,14 +50,8 @@ if(preg_match("/api\/browse\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
-		{
 		header("Location: /?changeset=" . $id);
-		}
 	}
 
 ################################################################################
@@ -68,14 +62,8 @@ if(preg_match("/api\/browse\/note\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
-		{
 		header("Location: /api/" . OSM_VERSION . "/notes/" . $id);
-		}
 	}
 
 ################################################################################
@@ -84,14 +72,8 @@ if(preg_match("/api\/browse\/note\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 
 if(preg_match("/apimap$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
-		{
 		header("Location: /api/" . OSM_VERSION . "/map?" . $_SERVER["QUERY_STRING"]);
-		}
 	}
 
 ################################################################################
@@ -105,18 +87,10 @@ if(preg_match("/api\/user\/(.*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	list($id, $folder) = explode("/", $id, 2);
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -128,32 +102,18 @@ if(preg_match("/api\/user\/(.*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			if($query = $resource->query("select * from user where ((id = '" . $id . "') or (display_name = '" . $id . "') or (email = '" . $id . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if(strlen($folder) == 0)
-			{
 			header("Location: /api/" . OSM_VERSION . "/user/" . $uid);
-			}
 		else
-			{
 			print($folder);
-			}
 		}
 	}
 
@@ -165,10 +125,6 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $k) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -179,16 +135,8 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -206,9 +154,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				if($query = $resource->query("select " . $type . ".* from " . $type . ", " . $type . "_tag where ((" . $type . ".id = " . $type . "_tag.id) and (" . $type . ".version = " . $type . "_tag.version) and (" . $type . "_tag.k = '" . $k . "') and (" . $type . ".visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans[$type][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -223,9 +169,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.id = " . $id . ") and (way_nd.version = " . $version . ") and (way_nd.ref = node.id) and (node.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["node"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -236,9 +180,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
-				{
 				ksort($trans[$type]);
-				}
 
 			################################################################################
 			# draw everything
@@ -252,34 +194,18 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						{
 						while($result = $query->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
 							$node = $osm->addChild($type);
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "node")
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid", "lat", "lon") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 								}
 							else
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "way")
 								{
@@ -290,18 +216,12 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 										$nd = $node->addChild("nd");
 
 										foreach(array("ref") as $key)
-											{
 											$nd->addAttribute($key, $result_way_nd->$key);
-											}
 										}
 
 									$query_way_nd->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "relation")
 								{
@@ -312,18 +232,12 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 										$member = $node->addChild("member");
 
 										foreach(array("type", "ref", "role") as $key)
-											{
 											$member->addAttribute($key, $result_relation_member->$key);
-											}
 										}
 
 									$query_relation_member->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 								{
@@ -332,9 +246,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 									$tag = $node->addChild("tag");
 
 									foreach(array("k", "v") as $key)
-										{
 										$tag->addAttribute($key, $result_tag->$key);
-										}
 									}
 
 								$query_tag->free_result();
@@ -347,15 +259,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				}
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -371,10 +275,6 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 	{
 	list($null, $k, $v) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -385,16 +285,8 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -412,9 +304,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 				if($query = $resource->query("select " . $type . ".* from " . $type . ", " . $type . "_tag where ((" . $type . ".id = " . $type . "_tag.id) and (" . $type . ".version = " . $type . "_tag.version) and (" . $type . "_tag.k = '" . $k . "') and (" . $type . "_tag.v = '" . $v . "') and (" . $type . ".visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans[$type][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -429,9 +319,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.id = " . $id . ") and (way_nd.version = " . $version . ") and (way_nd.ref = node.id) and (node.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["node"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -458,34 +346,18 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 						{
 						while($result = $query->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
 							$node = $osm->addChild($type);
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "node")
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid", "lat", "lon") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 								}
 							else
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "way")
 								{
@@ -496,18 +368,12 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 										$nd = $node->addChild("nd");
 
 										foreach(array("ref") as $key)
-											{
 											$nd->addAttribute($key, $result_way_nd->$key);
-											}
 										}
 
 									$query_way_nd->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "relation")
 								{
@@ -518,18 +384,12 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 										$member = $node->addChild("member");
 
 										foreach(array("type", "ref", "role") as $key)
-											{
 											$member->addAttribute($key, $result_relation_member->$key);
-											}
 										}
 
 									$query_relation_member->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 								{
@@ -538,9 +398,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 									$tag = $node->addChild("tag");
 
 									foreach(array("k", "v") as $key)
-										{
 										$tag->addAttribute($key, $result_tag->$key);
-										}
 									}
 
 								$query_tag->free_result();
@@ -553,15 +411,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 				}
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -577,10 +427,6 @@ if(preg_match("/api\/(\d*)\/(\d*)\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 	{
 	list($null, $z, $x, $y) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -588,22 +434,16 @@ if(preg_match("/api\/(\d*)\/(\d*)\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 		################################################################################
 
 		if(isset($_GET["dirty"]) === true)
-			{
-			exec("sudo php geo-tile.php " . $z . " " . $x . " " . $y . " > /dev/null &");
-			}
+			exec("sudo php tile.php " . $z . " " . $x . " " . $y . " > /dev/null &");
 
 		################################################################################
 		# get tiles content
 		################################################################################
 
 		if(file_exists("tiles/" . $z . "/" . $x . "/" . $y . ".png") === false)
-			{
 			$data = file_get_contents("index.png");
-			}
 		else
-			{
 			$data = file_get_contents("tiles/" . $z . "/" . $x . "/" . $y . ".png");
-			}
 
 		################################################################################
 		# show tile
@@ -624,10 +464,6 @@ if(preg_match("/api\/capabilities$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -637,10 +473,6 @@ if(preg_match("/api\/capabilities$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
-
-		################################################################################
-		# ...
-		################################################################################
 
 		$api = $osm->addChild("api");
 
@@ -668,15 +500,7 @@ if(preg_match("/api\/capabilities$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$status->addAttribute("api", "online"); # online | readonly | offline
 		$status->addAttribute("gpx", "online"); # online | readonly | offline
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -702,15 +526,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	$microtime = microtime(true);
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -725,9 +541,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
-			{
 			exception_bbox_missed();
-			}
 
 		################################################################################
 		# parse bbox
@@ -740,18 +554,14 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
-			{
 			exception_bbox_range();
-			}
 
 		################################################################################
 		# check bbox
 		################################################################################
 
 		if(check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat) === false)
-			{
 			exception_bbox_area();
-			}
 
 		################################################################################
 		# create default xml-file
@@ -761,29 +571,14 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$bounds = $osm->addChild("bounds");
 		$bounds->addAttribute("minlat", $min_lat);
 		$bounds->addAttribute("minlon", $min_lon);
 		$bounds->addAttribute("maxlat", $max_lat);
 		$bounds->addAttribute("maxlon", $max_lon);
 
-#		print("<osm version=\"0.6\" generator=\"geo.olderdissen.ro\">");
-#		print("<bounds minlat=\"" . $min_lat . "\" minlon=\"" . $min_lon . "\" maxlat=\"" . $max_lat . "\" maxlon=\"" . $max_lon . "\" />");
-
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -799,9 +594,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			if($query = $resource->query("select * from node where ((" . bboxs($min_lon, $min_lat, $max_lon, $max_lat) . ") and (visible = 'true'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$trans["node"][$result->id] = $result->version;
-					}
 
 				$query->free_result();
 				}
@@ -815,9 +608,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				if($query = $resource->query("select way.* from way, way_nd where ((way_nd.id = way.id) and (way_nd.version = way.version) and (way_nd.ref = " . $id . ") and (way.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["way"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -832,17 +623,11 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.id = " . $id . ") and (way_nd.version = " . $version . ") and (way_nd.ref = node.id) and (node.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["node"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			# Error: You requested too many nodes (limit is 50000). Either request a smaller area, or use planet.osm
 
@@ -857,9 +642,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					if($query = $resource->query("select relation.* from relation, relation_member where ((relation.id = relation_member.id) and (relation.version = relation_member.version) and (relation_member.type = '" . $type . "') and (relation_member.ref = " . $id . ") and (relation.visible = 'true'));"))
 						{
 						while($result = $query->fetch_object())
-							{
 							$trans["relation"][$result->id] = $result->version;
-							}
 
 						$query->free_result();
 						}
@@ -871,9 +654,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
-				{
 				ksort($trans[$type]);
-				}
 
 			################################################################################
 			# draw everything
@@ -887,39 +668,18 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						{
 						while($result = $query->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
-#							print("<" . $type);
 							$node = $osm->addChild($type);
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "node")
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid", "lat", "lon") as $key)
-									{
-#									print(" " . $key . "=\"" . $result->$key . "\"");
 									$node->addAttribute($key, $result->$key);
-									}
 								}
 							else
 								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid") as $key)
-									{
-#									print(" " . $key . "=\"" . $result->$key . "\"");
 									$node->addAttribute($key, $result->$key);
-									}
 								}
-
-#							print(">");
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "way")
 								{
@@ -927,25 +687,15 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 									{
 									while($result_way_nd = $query_way_nd->fetch_object())
 										{
-#										print("<nd");
 										$nd = $node->addChild("nd");
 
 										foreach(array("ref") as $key)
-											{
-#											print(" " . $key . "=\"" . $result_way_nd->$key . "\"");
 											$nd->addAttribute($key, $result_way_nd->$key);
-											}
-
-#										print(" />");
 										}
 
 									$query_way_nd->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "relation")
 								{
@@ -953,47 +703,28 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 									{
 									while($result_relation_member = $query_relation_member->fetch_object())
 										{
-#										print("<member");
 										$member = $node->addChild("member");
 
 										foreach(array("type", "ref", "role") as $key)
-											{
-#											print(" " . $key . "=\"" . $result_relation_member->$key . "\"");
 											$member->addAttribute($key, $result_relation_member->$key);
-											}
-
-#										print(" />");
 										}
 
 									$query_relation_member->free_result();
 									}
 								}
 
-							################################################################################
-							# ...
-							################################################################################
-
 							if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 								{
 								while($result_tag = $query_tag->fetch_object())
 									{
-#									print("<tag");
 									$tag = $node->addChild("tag");
 
 									foreach(array("k", "v") as $key)
-										{
-#										print(" " . $key . "=\"" . $result_tag->$key . "\"");
 										$tag->addAttribute($key, $result_tag->$key);
-										}
-
-#									print(" />");
 									}
 
 								$query_tag->free_result();
 								}
-
-#							print("</" . $type . ">");
-#							flush();
 							}
 
 						$query->free_result();
@@ -1004,28 +735,12 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$resource->close();
 			}
 
-#		print("</osm>");
-
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm->addAttribute("time", microtime(true) - $microtime);
 
 		foreach(array("node", "way", "relation") as $key)
-			{
 			$osm->addAttribute($key . "s", count($osm->$key));
-			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Disposition: inline; filename=\"map.osm\"");
 		header("Content-Type: text/xml; charset=utf-8");
@@ -1043,10 +758,6 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -1056,10 +767,6 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
-
-		################################################################################
-		# ...
-		################################################################################
 
 		$permissions = $osm->addChild("permissions");
 
@@ -1084,15 +791,7 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$permission = $permissions->addChild("permission");
 		$permission->addAttribute("name", "allow_write_notes");
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -1108,10 +807,6 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
@@ -1133,16 +828,8 @@ if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches)
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -1154,9 +841,7 @@ if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches)
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
@@ -1170,39 +855,21 @@ if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches)
 			if($query = $resource->query("select max(id) from changeset;"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$id = $result->id;
-					}
 
 				$query->free_result();
 				}
 
 			$id = $id + 1;
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->query("insert into changeset (id, uid, created_at) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "');");
 
 			foreach($osm->changeset as $changeset)
-				{
 				foreach($changeset->tag as $tag)
-					{
 					$resource->query("insert into changeset_tag (id, k, v) values (" . $id . ", '" . $tag["k"] . "', '" . str_replace("'", "\'", $tag["v"]) . "');");
-					}
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/plain");
 
@@ -1223,10 +890,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -1237,21 +900,9 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_changeset = $resource->query("select changeset.*, if(changeset.closed_at is null, 'true', 'false') as open, user.display_name as user from changeset, user where ((user.id = changeset.uid) and (changeset.id = " . $id . "));"))
 				{
@@ -1262,9 +913,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 					foreach(array("id", "user", "uid", "created_at", "open", "closed_at", "min_lat", "min_lon", "max_lat", "max_lon") as $key)
 						{
 						if($result_changeset->$key == null)
-							{
 							continue;
-							}
 
 						$changeset->addAttribute($key, $result_changeset->$key);
 						}
@@ -1275,10 +924,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 
 					$changeset->addAttribute("comments_count", 0);
 
-					################################################################################
-					# ...
-					################################################################################
-
 					if($query_changeset_tag = $resource->query("select * from changeset_tag where (id = " . $result_changeset->id . ") order by k asc;"))
 						{
 						while($result_changeset_tag = $query_changeset_tag->fetch_object())
@@ -1286,9 +931,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 							$tag = $changeset->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_changeset_tag->$key);
-								}
 							}
 
 						$query_changeset_tag->free_result();
@@ -1309,9 +952,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 								$comment = $discussion->addChild("comment");
 
 								foreach(array("date", "uid", "user") as $key)
-									{
 									$comment->addAttribute($key, $result_changeset_comment->$key);
-									}
 
 								$comment->addChild("text", $result_changeset_comment->text);
 								}
@@ -1324,22 +965,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 				$query_changeset->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -1355,10 +984,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $id) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
@@ -1380,35 +1005,15 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->query("delete from changeset_tag where (id = " . $id . ");");
 
 			foreach($osm->changeset as $changeset)
-				{
 				foreach($changeset->tag as $tag)
-					{
 					$resource->query("insert into changeset_tag (id, k, v) values (" . $id . ", '" . $tag["k"] . "', '" . str_replace("'", "\'", $tag["v"]) . "');");
-					}
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -1424,10 +1029,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
 		################################################################################
@@ -1436,27 +1037,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 
 		check_login();
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$got_pos = false;
-
-		################################################################################
-		# ...
-		################################################################################
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$min_lon = 0 + 180;
 			$min_lat = 0 +  90;
@@ -1541,18 +1126,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 				{
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					if($query_relation = $resource->query("select * from relation where ((id = " . $result->id . ") and (version in (" . ($result->version - 0) . ", " . ($result->version - 1) . ")));"))
 						{
 						while($result_relation = $query_relation->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
 							if($query_relation_member = $resource->query("select * from relation_member where ((id = " . $result_relation->id . ") and ((version = " . $result_relation->version . "));"))
 								{
 								while($result_relation_member = $query_relation_member->fetch_object())
@@ -1591,18 +1168,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 											{
 											while($result_way = $query_way->fetch_object())
 												{
-												################################################################################
-												# ...
-												################################################################################
-
 												if($query_way_nd = $resource->query("select * from way_nd where ((id = " . $result_way->id . ") and (version = " . $result_way->version . "));"))
 													{
 													while($result_way_nd = $query_way_nd->fetch_object())
 														{
-														################################################################################
-														# ...
-														################################################################################
-
 														if($query_node = $resource->query("select * from node where ((id = " . $result_way_nd->ref . ") and (changeset <= " . $result_way->changeset . ")) order by changeset desc limit 1;"))
 															{
 															while($result_node = $query_node->fetch_object())
@@ -1627,10 +1196,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 											}
 										}
 
-									################################################################################
-									# ...
-									################################################################################
-
 									if($result_relation_member->type = "relation")
 										{
 										# noone cares this
@@ -1648,27 +1213,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			if($got_pos === true)
-				{
 				foreach(array("min_lat" => $min_lat, "min_lon" => $min_lon, "max_lat" => $max_lat, "max_lon" => $max_lon) as $key => $value)
-					{
 					$resource->query("update changeset set " . $key . " = " . $value . " where (id = " . $id . ");");
-					}
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->query("update changeset set closed_at = '" . date("Y-m-d\TH:i:s\Z") . "' where (id = " . $id . ");");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -1678,9 +1227,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 		################################################################################
 
 		if($got_pos === true)
-			{
-			exec("sudo php geo-tile.php " . $id . " > /dev/null &");
-			}
+			exec("sudo php tile.php " . $id . " > /dev/null &");
 		}
 	}
 
@@ -1693,10 +1240,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -1707,29 +1250,13 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$action_create = $osm->addChild("create");
 		$action_modify = $osm->addChild("modify");
 		$action_delete = $osm->addChild("delete");
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -1737,59 +1264,31 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 					{
 					while($result = $query->fetch_object())
 						{
-						################################################################################
-						# ...
-						################################################################################
-
 						if($result->version == 1)
-							{
 							$action_node = $action_create->addChild($type);
-							}
 						elseif($result->visible == "false")
-							{
 							$action_node = $action_delete->addChild($type);
-							}
 						else
-							{
 							$action_node = $action_modify->addChild($type);
-							}
-
-						################################################################################
-						# ...
-						################################################################################
 
 						if($result->visible == "false") # nodes also contain lon/lat ???
 							{
 							foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-								{
 								$action_node->addAttribute($key, $result->$key);
-								}
 
 							continue;
 							}
 
-						################################################################################
-						# ...
-						################################################################################
-
 						if($type == "node")
 							{
 							foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-								{
 								$action_node->addAttribute($key, $result->$key);
-								}
 							}
 						else
 							{
 							foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-								{
 								$action_node->addAttribute($key, $result->$key);
-								}
 							}
-
-						################################################################################
-						# ...
-						################################################################################
 
 						if($type == "way")
 							{
@@ -1800,9 +1299,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 									$nd = $action_node->addChild("nd");
 
 									foreach(array("ref") as $key)
-										{
 										$nd->addAttribute($key, $result_way_nd->$key);
-										}
 									}
 
 								$query_way_nd->free_result();
@@ -1818,18 +1315,12 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 									$member = $action_node->addChild("member");
 
 									foreach(array("type", "ref", "role") as $key)
-										{
 										$member->addAttribute($key, $result_relation_member->$key);
-										}
 									}
 
 								$query_relation_member->free_result();
 								}
 							}
-
-						################################################################################
-						# ...
-						################################################################################
 
 						if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 							{
@@ -1838,9 +1329,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 								$tag = $action_node->addChild("tag");
 
 								foreach(array("k", "v") as $key)
-									{
 									$tag->addAttribute($key, $result_tag->$key);
-									}
 								}
 
 							$query_tag->free_result();
@@ -1852,10 +1341,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
@@ -1866,22 +1351,12 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 		foreach(array("create", "modify", "delete") as $action)
 			{
 			if(count($osm->$action->children()) != 0)
-				{
 				continue;
-				}
 
 			unset($osm->$action);
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -1896,10 +1371,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 if(preg_match("/api\/0\.6\/changeset\/(\d*)\/expand_bbox$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $id) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -1921,18 +1392,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/expand_bbox$/", $_SERVER["PHP_SELF"
 
 		$data = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$min_lon = 0 + 180;
 		$min_lat = 0 +  90;
 		$max_lon = 0 - 180;
 		$max_lat = 0 -  90;
-
-		################################################################################
-		# ...
-		################################################################################
 
 		foreach($data->node as $node)
 			{
@@ -1942,30 +1405,12 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/expand_bbox$/", $_SERVER["PHP_SELF"
 			$max_lat = max($node["lat"], $max_lat);
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
-			################################################################################
-			# ...
-			################################################################################
-
 			foreach(array("min_lat" => $min_lat, "min_lon" => $min_lon, "max_lat" => $max_lat, "max_lon" => $max_lon) as $key => $value)
-				{
 				$resource->query("update changeset set " . $key . " = " . $value . " where (id = " . $id . ");");
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -1981,16 +1426,8 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# ...
-		################################################################################
-
 		$search = array();
 
 		################################################################################
@@ -2004,9 +1441,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			################################################################################
 
 			if((strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
-				{
 				exception_bbox_missed();
-				}
 
 			################################################################################
 			# parse bbox
@@ -2019,13 +1454,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			################################################################################
 
 			if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
-				{
 				exception_bbox_range();
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$search[] = "((changeset.min_lon < " . $max_lon . ") and (changeset.min_lat < " . $max_lat . ") and (changeset.max_lon > " . $min_lon . ") and (changeset.max_lat > " . $min_lat . "))";
 			}
@@ -2037,9 +1466,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		if(isset($_GET["user"]) === true)
 			{
 			if(strlen($_GET["user"]) == 0)
-				{
 				exception_user_invalid();
-				}
 
 			$search[] = "(changeset.uid = " . $_GET["user"] . ")"; # original api does not provide search by display_name
 			}
@@ -2051,9 +1478,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		if(isset($_GET["time"]) === true)
 			{
 			if(strlen($_GET["time"]) == 0)
-				{
 				exception_date_invalid();
-				}
 
 			if(count(explode(",", $_GET["time"])) == 1)
 				{
@@ -2075,18 +1500,14 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if(isset($_GET["open"]) === true)
-			{
 			$search[] = "(changeset.closed_at is null)";
-			}
 
 		################################################################################
 		# check closed
 		################################################################################
 
 		if(isset($_GET["closed"]) === true)
-			{
 			$search[] = "(changeset.closed_at is not null)";
-			}
 
 		################################################################################
 		# check changesets
@@ -2095,9 +1516,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		if(isset($_GET["changesets"]) === true)
 			{
 			if(strlen($_GET["changesets"]) == 0)
-				{
 				exception_changeset_missed();
-				}
 
 			$search[] = "(changeset.id in (" . $_GET["changesets"] . "))";
 			}
@@ -2110,21 +1529,9 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_changeset = $resource->query("select changeset.*, if(changeset.closed_at is null, 'true', 'false') as open, user.display_name as user from changeset, user" . (count($search) == 0 ? " " : " where ((user.id = changeset.uid) and (" . implode(" and ", $search) . ")) ") . "order by changeset.id desc limit 100;"))
 				{
@@ -2135,16 +1542,10 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					foreach(array("id", "user", "uid", "created_at", "open", "closed_at", "min_lat", "min_lon", "max_lat", "max_lon") as $key)
 						{
 						if($result_changeset->$key == null)
-							{
 							continue;
-							}
 
 						$changeset->addAttribute($key, $result_changeset->$key);
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_changeset_tag = $resource->query("select * from changeset_tag where (id = " . $result_changeset->id . ") order by k asc;"))
 						{
@@ -2153,9 +1554,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 							$tag = $changeset->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_changeset_tag->$key);
-								}
 							}
 
 						$query_changeset_tag->free_result();
@@ -2165,22 +1564,10 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				$query_changeset->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -2198,10 +1585,6 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $id) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
@@ -2231,21 +1614,9 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 
 		$osm_change = new SimpleXMLElement($osm_change);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			foreach(array("node", "node_tag", "way", "way_nd", "way_tag", "relation", "relation_member", "relation_tag") as $type)
 				{
@@ -2290,16 +1661,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 						if($query = $resource->query("select max(id) from " . $type_name . ";"))
 							{
 							while($result = $query->fetch_object())
-								{
 								$id = $result->id;
-								}
 
 							$query->free_result();
 							}
-
-						################################################################################
-						# ...
-						################################################################################
 
 						$old_id = intval($type["id"]);
 						$new_id = $id + 1;
@@ -2367,14 +1732,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 					################################################################################
 
 					if($action_name == "modify")
-						{
 						$resource->query("update " . $type_name . " set visible = 'false' where ((id = " . $old_id . ") and (version = " . $old_version . "));");
-						}
 
 					if($action_name == "delete")
-						{
 						$resource->query("update " . $type_name . " set visible = 'false' where ((id = " . $old_id . ") and (version = " . $old_version . "));");
-						}
 
 					################################################################################
 					# insert new version
@@ -2383,14 +1744,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 					if($type_name == "node")
 						{
 						if($action_name == "create")
-							{
 							$resource->query("insert into node (id, version, changeset, timestamp, visible, lat, lon) values (" . $new_id . ", " . $new_version . ", " . $type["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $type["visible"] . "', " . $type["lat"] . ", " . $type["lon"] . ");");
-							}
 
 						if($action_name == "modify")
-							{
 							$resource->query("insert into node (id, version, changeset, timestamp, visible, lat, lon) values (" . $new_id . ", " . $new_version . ", " . $type["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $type["visible"] . "', " . $type["lat"] . ", " . $type["lon"] . ");");
-							}
 
 						if($action_name == "delete")
 							{
@@ -2408,14 +1765,10 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 						}
 
 					if($type_name == "way")
-						{
 						$resource->query("insert into way (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $type["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $type["visible"] . "');");
-						}
 
 					if($type_name == "relation")
-						{
 						$resource->query("insert into relation (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $type["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $type["visible"] . "');");
-						}
 
 					################################################################################
 					# insert new version
@@ -2451,35 +1804,17 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 							}
 
 						foreach($type->tag as $tag)
-							{
 							$resource->query("insert into " . $type_name . "_tag (id, version, k, v) values (" . $new_id . ", " . $new_version . ", '" . $tag["k"] . "', '" . str_replace("'", "\'", $tag["v"]) . "');");
-							}
 						}
 					}
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 #			$resource->query("unlock tables;");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$diff = $diff->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -2523,10 +1858,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 	{
 	list($null, $type) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
 		################################################################################
@@ -2547,21 +1878,9 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			foreach($osm->$type as $helper)
 				{
@@ -2574,16 +1893,10 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 				if($query = $resource->query("select max(id) from " . $type . ";"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$id = $result->id;
-						}
 
 					$query->free_result();
 					}
-
-				################################################################################
-				# ...
-				################################################################################
 
 				$old_id = intval($helper["id"]) + 0;
 				$new_id = $id + 1;
@@ -2591,28 +1904,14 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 				$old_version = 0;
 				$new_version = 1;
 
-				################################################################################
-				# ...
-				################################################################################
-
 				if($type == "node")
-					{
 					$resource->query("insert into node (id, version, changeset, timestamp, visible, lat, lon) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "', " . $helper["lat"] . ", " . $helper["lon"] . ");");
-					}
 
 				if($type == "way")
-					{
 					$resource->query("insert into way (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
 
 				if($type == "relation")
-					{
 					$resource->query("insert into relation (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
-
-				################################################################################
-				# ...
-				################################################################################
 
 				$z = 0;
 
@@ -2623,10 +1922,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 					$resource->query("insert into way_nd (id, version, ref, z) values (" . $new_id . ", " . $new_version . ", " . $nd["ref"] . ", " . $z . ");");
 					}
 
-				################################################################################
-				# ...
-				################################################################################
-
 				$z = 0;
 
 				foreach($helper->member as $member)
@@ -2636,26 +1931,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 					$resource->query("insert into relation_member (id, version, type, ref, role, z) values (" . $new_id . ", " . $new_version . ", '" . $member["type"] . "', " . $member["ref"] . ", '" . $member["role"] . "', " . $z . ");");
 					}
 
-				################################################################################
-				# ...
-				################################################################################
-
 				foreach($helper->tag as $tag)
-					{
 					$resource->query("insert into " . $type . "_tag (id, version, k, v) values (" . $new_id . ", " . $new_version . ", '" . $tag["k"] . "', '" . str_replace("'", "\'", $tag["v"]) . "');");
-					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/plain");
 
@@ -2672,10 +1953,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 	{
 	list($null, $type, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -2686,54 +1963,26 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select " . $type . ".*, user.id as uid, user.display_name as user from " . $type . ", changeset, user where ((changeset.id = " . $type . ".changeset) and (user.id = changeset.uid) and (" . $type . ".id = " . $id . ")) order by version desc limit 1;"))
 				{
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild($type);
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "node")
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
 					else
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "way")
 						{
@@ -2744,18 +1993,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 								$nd = $node->addChild("nd");
 
 								foreach(array("ref") as $key)
-									{
 									$nd->addAttribute($key, $result_way_nd->$key);
-									}
 								}
 
 							$query_way_nd->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "relation")
 						{
@@ -2766,18 +2009,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 								$member = $node->addChild("member");
 
 								foreach(array("type", "ref", "role") as $key)
-									{
 									$member->addAttribute($key, $result_relation_member->$key);
-									}
 								}
 
 							$query_relation_member->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 						{
@@ -2786,9 +2023,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -2798,22 +2033,10 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -2833,10 +2056,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 	{
 	list($null, $type, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
 		################################################################################
@@ -2857,62 +2076,28 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			foreach($osm->$type as $helper)
 				{
-				################################################################################
-				# ...
-				################################################################################
-
 				$old_id = intval($helper["id"]) + 0;
 				$new_id = intval($helper["id"]) + 0;
 
 				$old_version = intval($helper["version"]) + 0;
 				$new_version = intval($helper["version"]) + 1;
 
-				################################################################################
-				# ...
-				################################################################################
-
 				$resource->query("update " . $type . " set visible = 'false' where ((id = " . $old_id . ") and (version = " . $old_version . "));");
 
-				################################################################################
-				# ...
-				################################################################################
-
 				if($type == "node")
-					{
 					$resource->query("insert into node (id, version, changeset, timestamp, visible, lat, lon) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "', " . $helper["lat"] . ", " . $helper["lon"] . ");");
-					}
 
 				if($type == "way")
-					{
 					$resource->query("insert into way (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
 
 				if($type == "relation")
-					{
 					$resource->query("insert into relation (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
-
-				################################################################################
-				# ...
-				################################################################################
 
 				$z = 0;
 
@@ -2923,10 +2108,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 					$resource->query("insert into way_nd (id, version, ref, z) values (" . $new_id . ", " . $new_version . ", " . $nd["ref"] . ", " . $z . ");");
 					}
 
-				################################################################################
-				# ...
-				################################################################################
-
 				$z = 0;
 
 				foreach($helper->member as $member)
@@ -2936,26 +2117,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 					$resource->query("insert into relation_member (id, version, type, ref, role, z) values (" . $new_id . ", " . $new_version . ", '" . $member["type"] . "', " . $member["ref"] . ", '" . $member["role"] . "', " . $z . ");");
 					}
 
-				################################################################################
-				# ...
-				################################################################################
-
 				foreach($helper->tag as $tag)
-					{
 					$resource->query("insert into " . $type . "_tag values (id, version, k, v) (" . $new_id . ", " . $new_version . ", '" . $tag["k"] . "', '" . str_replace("'", "\'", $tag["v"]) . "');");
-					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -2971,10 +2138,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $type, $id) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "DELETE")
 		{
@@ -2996,70 +2159,32 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			foreach($osm->$type as $helper)
 				{
-				################################################################################
-				# ...
-				################################################################################
-
 				$old_id = intval($helper["id"]) + 0;
 				$new_id = intval($helper["id"]) + 0;
 
 				$old_version = intval($helper["version"]) + 0;
 				$new_version = intval($helper["version"]) + 1;
 
-				################################################################################
-				# ...
-				################################################################################
-
 				$resource->query("update " . $type . " set visible = 'false' where ((id = " . $id . ") and (version = " . $old_version . "));");
 
-				################################################################################
-				# ...
-				################################################################################
-
 				if($type == "node")
-					{
 					$resource->query("insert into node (id, version, changeset, timestamp, visible, lat, lon) values (" . $id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "', 0, 0);");
-					}
 
 				if($type == "way")
-					{
 					$resource->query("insert into way (id, version, changeset, timestamp, visible) values (" . $id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
 
 				if($type == "relation")
-					{
 					$resource->query("insert into relation (id, version, changeset, timestamp, visible) values (" . $id . ", " . $new_version . ", " . $helper["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $helper["visible"] . "');");
-					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3076,10 +2201,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 	{
 	list($null, $type, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -3090,60 +2211,28 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select " . $type . ".*, user.id as uid, user.display_name as user from " . $type . ", changeset, user where ((changeset.id = " . $type . ".changeset) and (user.id = changeset.uid) and (" . $type . ".id = " . $id . ")) order by " . $type . ".version asc;"))
 				{
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild($type);
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$result->visible = "true"; # things are always visible
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "node")
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
 					else
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "way")
 						{
@@ -3154,18 +2243,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 								$nd = $node->addChild("nd");
 
 								foreach(array("ref") as $key)
-									{
 									$nd->addAttribute($key, $result_way_nd->$key);
-									}
 								}
 
 							$query_way_nd->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "relation")
 						{
@@ -3176,18 +2259,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 								$member = $node->addChild("member");
 
 								foreach(array("type", "ref", "role") as $key)
-									{
 									$member->addAttribute($key, $result_relation_member->$key);
-									}
 								}
 
 							$query_relation_member->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 						{
@@ -3196,9 +2273,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -3208,22 +2283,10 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3240,10 +2303,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 	{
 	list($null, $type, $id, $version) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -3254,60 +2313,28 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select " . $type . ".*, user.id as uid, user.display_name as user from " . $type . ", changeset, user where ((changeset.id = " . $type . ".changeset) and (user.id = changeset.uid) and (" . $type . ".id = " . $id . ") and (" . $type . ".version = " . $version . "));"))
 				{
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild($type);
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$result->visible = "true"; # things are always visible
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "node")
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
 					else
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "way")
 						{
@@ -3318,18 +2345,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 								$nd = $node->addChild("nd");
 
 								foreach(array("ref") as $key)
-									{
 									$nd->addAttribute($key, $result_way_nd->$key);
-									}
 								}
 
 							$query_way_nd->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "relation")
 						{
@@ -3340,18 +2361,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 								$member = $node->addChild("member");
 
 								foreach(array("type", "ref", "role") as $key)
-									{
 									$member->addAttribute($key, $result_relation_member->$key);
-									}
 								}
 
 							$query_relation_member->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 						{
@@ -3360,9 +2375,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -3372,22 +2385,10 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3404,16 +2405,8 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 	{
 	list($null, $type) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# ...
-		################################################################################
-
 		if((isset($_GET[$type . "s"]) === false) || (strlen($_GET[$type . "s"]) == 0))
 			{
 			exception_object_missed($type);
@@ -3427,69 +2420,35 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select " . $type . ".*, user.id as uid, user.display_name as user from " . $type . ", changeset, user where ((changeset.id = " . $type . ".changeset) and (user.id = changeset.uid) and (" . $type . ".id in (" . $_GET[$type . "s"] . ")) and (" . $type . ".visible = 'true')) order by " . $type . ".id asc;"))
 				{
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild($type);
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($result->visible == "false")
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 
 						continue;
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					if($type == "node")
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 
 						}
 					else
 						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-							{
 							$node->addAttribute($key, $result->$key);
-							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "way")
 						{
@@ -3500,18 +2459,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 								$nd = $node->addChild("nd");
 
 								foreach(array("ref") as $key)
-									{
 									$nd->addAttribute($key, $result_way_nd->$key);
-									}
 								}
 
 							$query_way_nd->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($type == "relation")
 						{
@@ -3522,18 +2475,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 								$member = $node->addChild("member");
 
 								foreach(array("type", "ref", "role") as $key)
-									{
 									$member->addAttribute($key, $result_relation_member->$key);
-									}
 								}
 
 							$query_relation_member->free_result();
 							}
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 						{
@@ -3542,9 +2489,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -3554,22 +2499,10 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3586,10 +2519,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 	{
 	list($null, $type, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -3600,44 +2529,18 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_relation = $resource->query("select distinct relation.*, user.id as uid, user.display_name as user from relation, relation_member, changeset, user where ((relation.id = relation_member.id) and (relation.version = relation_member.version) and (changeset.id = relation.changeset) and (user.id = changeset.uid) and (relation_member.type = '" . $type . "') and (relation_member.ref = " . $id . ") and (relation.visible = 'true')) order by relation.id asc;"))
 				{
 				while($result_relation = $query_relation->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild("relation");
 
-					################################################################################
-					# ...
-					################################################################################
-
 					foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-						{
 						$node->addAttribute($key, $result_relation->$key);
-						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_relation_member = $resource->query("select * from relation_member where ((id = " . $result_relation->id . ") and (version = " . $result_relation->version . ")) order by z asc;"))
 						{
@@ -3646,17 +2549,11 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 							$member = $node->addChild("member");
 
 							foreach(array("type", "ref", "role") as $key)
-								{
 								$member->addAttribute($key, $result_relation_member->$key);
-								}
 							}
 
 						$query_relation_member->free_result();
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from relation_tag where ((id = " . $result_relation->id . ") and (version = " . $result_relation->version . ")) order by k asc;"))
 						{
@@ -3665,9 +2562,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -3680,15 +2575,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3705,10 +2592,6 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -3719,44 +2602,18 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_way = $resource->query("select distinct way.*, user.id as uid, user.display_name as user from way, way_nd, changeset, user where ((way_nd.id = way.id) and (way_nd.version = way.version) and (changeset.id = way.changeset) and (user.id = changeset.uid) and (way_nd.ref = " . $id . ") and (way.visible = 'true')) order by way.id asc;"))
 				{
 				while($result_way = $query_way->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$node = $osm->addChild("way");
 
-					################################################################################
-					# ...
-					################################################################################
-
 					foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-						{
 						$node->addAttribute($key, $result_way->$key);
-						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_way_nd = $resource->query("select * from way_nd where ((id = " . $result_way->id . ") and (version = " . $result_way->version . ")) order by z asc;"))
 						{
@@ -3765,17 +2622,11 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 							$nd = $node->addChild("nd");
 
 							foreach(array("ref") as $key)
-								{
 								$nd->addAttribute($key, $result_way_nd->$key);
-								}
 							}
 
 						$query_way_nd->free_result();
 						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_tag = $resource->query("select * from way_tag where ((id = " . $result_way->id . ") and (version = " . $result_way->version . ")) order by k asc;"))
 						{
@@ -3784,9 +2635,7 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 							$tag = $node->addChild("tag");
 
 							foreach(array("k", "v") as $key)
-								{
 								$tag->addAttribute($key, $result_tag->$key);
-								}
 							}
 
 						$query_tag->free_result();
@@ -3799,15 +2648,7 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -3824,15 +2665,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 	{
 	list($null, $type, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	$microtime = microtime(true);
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -3844,16 +2677,8 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -3862,49 +2687,31 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
 
-			################################################################################
-			# ...
-			################################################################################
-
 			if($query = $resource->query("select " . $type . ".* from " . $type . " where ((" . $type . ".id = " . $id . ") and (" . $type . ".visible = 'true'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$trans[$type][$result->id] = $result->version;
-					}
 
 				$query->free_result();
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($type == "way")
 				{
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.ref = node.id) and (way_nd.id = " . $id . ") and (node.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["node"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($type == "relation")
 				{
 				if($query = $resource->query("select node.* from node, relation_member where ((relation_member.ref = node.id) and (relation_member.type = 'node') and (relation_member.id = " . $id . ") and (node.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["node"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -3912,9 +2719,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 				if($query = $resource->query("select way.* from way, relation_member where ((relation_member.ref = way.id) and (relation_member.type = 'way') and (relation_member.id = " . $id . ") and (way.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["way"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -3922,9 +2727,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 				if($query = $resource->query("select relation.* from relation, relation_member where ((relation_member.ref = relation.id) and (relation_member.type = 'relation') and (relation_member.id = " . $id . ") and (relation.visible = 'true'));"))
 					{
 					while($result = $query->fetch_object())
-						{
 						$trans["relation"][$result->id] = $result->version;
-						}
 
 					$query->free_result();
 					}
@@ -3935,9 +2738,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
-				{
 				ksort($trans[$type]);
-				}
 
 			################################################################################
 			# draw everything
@@ -3951,34 +2752,18 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 						{
 						while($result = $query->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
 							$node = $osm->addChild($type);
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "node")
 								{
 								foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($type == "way")
 								{
 								foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 
 								if($query_way_nd = $resource->query("select * from way_nd where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by z asc;"))
 									{
@@ -3987,25 +2772,17 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 										$nd = $node->addChild("nd");
 
 										foreach(array("ref") as $key)
-											{
 											$nd->addAttribute($key, $result_way_nd->$key);
-											}
 										}
 
 									$query_way_nd->free_result();
 									}
 								}
 
-							################################################################################
-							# ...
-							################################################################################
-
 							if($type == "relation")
 								{
 								foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
-									{
 									$node->addAttribute($key, $result->$key);
-									}
 
 								if($query_relation_member = $resource->query("select * from relation_member where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by z asc;"))
 									{
@@ -4014,18 +2791,12 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 										$member = $node->addChild("member");
 
 										foreach(array("type", "ref", "role") as $key)
-											{
 											$member->addAttribute($key, $result_relation_member->$key);
-											}
 										}
 
 									$query_relation_member->free_result();
 									}
 								}
-
-							################################################################################
-							# ...
-							################################################################################
 
 							if($query_tag = $resource->query("select * from " . $type . "_tag where ((id = " . $result->id . ") and (version = " . $result->version . ")) order by k asc;"))
 								{
@@ -4034,9 +2805,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 									$tag = $node->addChild("tag");
 
 									foreach(array("k", "v") as $key)
-										{
 										$tag->addAttribute($key, $result_tag->$key);
-										}
 									}
 
 								$query_tag->free_result();
@@ -4048,28 +2817,12 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 					}
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm->addAttribute("time", microtime(true) - $microtime);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -4094,10 +2847,6 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -4105,9 +2854,7 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
-			{
 			exception_bbox_missed();
-			}
 
 		################################################################################
 		# parse bbox
@@ -4120,18 +2867,14 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
-			{
 			exception_bbox_range();
-			}
 
 		################################################################################
 		# check bbox
 		################################################################################
 
 		if(check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat) === false)
-			{
 			exception_bbox_area();
-			}
 
 		################################################################################
 		# create default xml-file
@@ -4141,21 +2884,9 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$gpx->addAttribute("version", "1.0");
 		$gpx->addAttribute("creator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select * from gpx_trackpoint where (" . bboxs($min_lon, $min_lat, $max_lon, $max_lat) . ") order by id asc, track asc, z asc limit " . ((isset($_GET["page"]) === false ? 0 : $_GET["page"]) * 5000) . ",5000;"))
 				{
@@ -4169,9 +2900,7 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					################################################################################
 
 					if($t != $result->id)
-						{
 						$trk = $gpx->addChild("trk");
-						}
 
 					$t = $result->id + 0;
 
@@ -4180,34 +2909,20 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					################################################################################
 
 					if($z != $result->z)
-						{
 						$trkseg = $trk->addChild("trkseg");
-						}
 
 
 					$z = $result->z + 1;
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$trkpt = $trkseg->addChild("trkpt");
 
 					foreach(array("lat", "lon") as $key)
-						{
 						$trkpt->addAttribute($key, $result->$key);
-						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					foreach(array("ele", "time", "hdop") as $key)
 						{
 						if($result->$key == null)
-							{
 							continue;
-							}
 
 						$trkpt->addChild($key, $result->$key);
 						}
@@ -4216,22 +2931,10 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$gpx = $gpx->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Disposition: inline; filename=\"tracks.gpx\"");
 		header("Content-Type: text/xml; charset=utf-8");
@@ -4248,10 +2951,6 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 		################################################################################
@@ -4259,10 +2958,6 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		check_login();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		$gpx = ($_FILES["file"]["tmp_name"] == "" ? "<gpx />" : file_get_contents($_FILES["file"]["tmp_name"]));
 
@@ -4272,16 +2967,8 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 		$gpx = new SimpleXMLElement($gpx);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -4293,9 +2980,7 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
@@ -4309,18 +2994,12 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			if($query = $resource->query("select * from gpx order by id desc limit 1;"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$id = $result->id;
-					}
 
 				$query->free_result();
 				}
 
 			$id = $id + 1;
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$lat = 0; # $gpx->trk[0]->trkseg[0]->trkpt[0]["lat"];
 			$lon = 0; # $gpx->trk[0]->trkseg[0]->trkpt[0]["lon"];
@@ -4343,24 +3022,14 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				break;
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->query("insert into gpx (id, uid, name, lat, lon, timestamp, description, pending, visibility) values (" . $id . ", " . $uid . ", '" . ($_FILES["file"]["name"] == "" ? "default.gpx" : $_FILES["file"]["name"]) . "', " . $lat . ", " . $lon . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . str_replace("'", "\'", $_POST["description"]) . "', 'false', '" . $_POST["visibility"] . "');");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if((isset($_POST["tags"]) === true) && (strlen($_POST["tags"]) != 0))
 				{
 				foreach(explode(",", $_POST["tags"]) as $tag)
 					{
 					if(trim($tag) == "")
-						{
 						continue;
-						}
 
 					$resource->query("insert into gpx_tag (id, tag) values (" . $id . ", '" . trim($tag) . "');");
 					}
@@ -4385,9 +3054,7 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						$z = $z + 1;
 
 						foreach(array("ele", "time", "hdop") as $key)
-							{
 							$trkpt->$key = (isset($trkpt->$key) === false ? null : $trkpt->$key);
-							}
 
 						$resource->query("insert into gpx_trackpoint (id, track, ele, time, hdop, lat, lon, z) values (" . $id . ", " . $t . ", " . $trkpt->ele . ", " . $trkpt->time . ", " . $trkpt->hdop . ", " . $trkpt["lat"] . ", " . $trkpt["lon"] . ", " . $z . ");");
 						}
@@ -4409,10 +3076,6 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -4429,57 +3092,25 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_gpx = $resource->query("select gpx.*, user.display_name as user from gpx, user where ((user.id = gpx.uid) and (gpx.id = " . $id . ") and ((user.display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (user.email = '" . $_SERVER["PHP_AUTH_USER"] . "')));"))
 				{
 				while($result_gpx = $query_gpx->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$gpx_file = $osm->addChild("gpx_file");
 
-					################################################################################
-					# ...
-					################################################################################
-
 					foreach(array("id", "name", "lat", "lon", "user", "visibility", "pending", "timestamp") as $key)
-						{
 						$gpx_file->addAttribute($key, $result_gpx->$key);
-						}
-
-					################################################################################
-					# ...
-					################################################################################
 
 					$gpx_file->addChild("description", $result_gpx->description);
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_gpx_tag = $resource->query("select * from gpx_tag where (id = " . $result_gpx->id . ");"))
 						{
 						while($result_gpx_tag = $query_gpx_tag->fetch_object())
-							{
 							$gpx_file->addChild("tag", $result_gpx_tag->tag);
-							}
 
 						$query_gpx_tag->free_result();
 						}
@@ -4488,22 +3119,10 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 				$query_gpx->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -4518,10 +3137,6 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $id) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -4539,21 +3154,9 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 		$gpx->addAttribute("version", "1.0");
 		$gpx->addAttribute("creator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$trk = $gpx->addChild("trk");
 
@@ -4561,27 +3164,11 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 				{
 				while($result_gpx = $query_gpx->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$trk->addChild("name", $result_gpx->name);
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_gpx_trackpoint = $resource->query("select * from gpx_trackpoint where (id = " . $result_gpx->id . ") order by track asc, z asc;"))
 						{
-						################################################################################
-						# ...
-						################################################################################
-
 						$z = 0;
-
-						################################################################################
-						# ...
-						################################################################################
 
 						while($result_gpx_trackpoint = $query_gpx_trackpoint->fetch_object())
 							{
@@ -4590,31 +3177,15 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 							################################################################################
 
 							if($z != $result_gpx_trackpoint->z)
-								{
 								$trkseg = $trk->addChild("trkseg");
-								}
 
-
-							################################################################################
-							# ...
-							################################################################################
 
 							$z = $result_gpx_trackpoint->z + 1;
 
-							################################################################################
-							# ...
-							################################################################################
-
 							$trkpt = $trkseg->addChild("trkpt");
 
-							################################################################################
-							# ...
-							################################################################################
-
 							foreach(array("lat", "lon") as $key)
-								{
 								$trkpt->addAttribute($key, $result_gpx_trackpoint->$key);
-								}
 							}
 
 						$query_gpx_trackpoint->free_result();
@@ -4624,22 +3195,10 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 				$query_gpx->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$gpx = $gpx->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Disposition: inline; filename=\"tracks.gpx\"");
 		header("Content-Type: text/xml; charset=utf-8");
@@ -4655,10 +3214,6 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 if(preg_match("/api\/0\.6\/user\/gpx_files$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -4676,49 +3231,25 @@ if(preg_match("/api\/0\.6\/user\/gpx_files$/", $_SERVER["PHP_SELF"], $matches) =
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_gpx = $resource->query("select gpx.*, user.display_name as user from gpx, user where ((user.id = gpx.uid) and ((user.display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (user.email = '" . $_SERVER["PHP_AUTH_USER"] . "'))) order by gpx.timestamp desc;"))
 				{
 				while($result_gpx = $query_gpx->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$gpx_file = $osm->addChild("gpx_file");
 
 					foreach(array("id", "name", "lat", "lon", "user", "visibility", "pending", "timestamp") as $key)
-						{
 						$gpx_file->addAttribute($key, $result_gpx->$key);
-						}
 
 					$gpx_file->addChild("description", $result_gpx->description);
-
-					################################################################################
-					# ...
-					################################################################################
 
 					if($query_gpx_tag = $resource->query("select * from gpx_tag where (id = " . $result_gpx->id . ");"))
 						{
 						while($result_gpx_tag = $query_gpx_tag->fetch_object())
-							{
 							$gpx_file->addChild("tag", $result_gpx_tag->tag);
-							}
 
 						$query_tag->free_result();
 						}
@@ -4727,22 +3258,10 @@ if(preg_match("/api\/0\.6\/user\/gpx_files$/", $_SERVER["PHP_SELF"], $matches) =
 				$query_gpx->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -4758,10 +3277,6 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -4772,21 +3287,9 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select * from user where (id = " . $id . ");"))
 				{
@@ -4798,9 +3301,7 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					if($query_changeset = $resource->query("select count(*) as count from changeset where (uid = " . $result->id . ");"))
 						{
 						while($result_changeset = $query_changeset->fetch_object())
-							{
 							$count_a = $result_changeset->count;
-							}
 
 						$query->free_result();
 						}
@@ -4808,9 +3309,7 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					if($query_gpx = $resource->query("select count(*) as count from gpx where (uid = " . $result->id . ");"))
 						{
 						while($result_gpx = $query_gpx->fetch_object())
-							{
 							$count_b = $result_gpx->count;
-							}
 
 						$query->free_result();
 						}
@@ -4818,9 +3317,7 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					$user = $osm->addChild("user");
 
 						foreach(array("id", "display_name", "account_created") as $key)
-							{
 							$user->addAttribute($key, $result->$key);
-							}
 
 						$description = $user->addChild("description", $result->description);
 
@@ -4847,15 +3344,7 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -4870,10 +3359,6 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -4891,21 +3376,9 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
@@ -4920,9 +3393,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					if($query_changeset = $resource->query("select count(*) as count from changeset where (uid = " . $result->id . ");"))
 						{
 						while($result_changeset = $query_changeset->fetch_object())
-							{
 							$count_a = $result_changeset->count;
-							}
 
 						$query_changeset->free_result();
 						}
@@ -4930,9 +3401,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					if($query_gpx = $resource->query("select count(*) as count from gpx where (uid = " . $result->id . ");"))
 						{
 						while($result_gpx = $query_gpx->fetch_object())
-							{
 							$count_b = $result_gpx->count;
-							}
 
 						$query_gpx->free_result();
 						}
@@ -4940,9 +3409,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					if($query_message = $resource->query("select count(*) as count from message where (uid_to = " . $result->id . ");"))
 						{
 						while($result_message = $query_message->fetch_object())
-							{
 							$count_c = $result_message->count;
-							}
 
 						$query_message->free_result();
 						}
@@ -4950,9 +3417,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					if($query_message = $resource->query("select count(*) as count from message where ((uid_to = " . $result->id . ") and (unread = 'true'));"))
 						{
 						while($result_message = $query_message->fetch_object())
-							{
 							$count_d = $result_message->count;
-							}
 
 						$query_message->free_result();
 						}
@@ -4960,9 +3425,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					if($query_message = $resource->query("select count(*) as count from message where (uid_from = " . $result->id . ");"))
 						{
 						while($result_message = $query_message->fetch_object())
-							{
 							$count_e = $result_message->count;
-							}
 
 						$query_message->free_result();
 						}
@@ -4970,9 +3433,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 					$user = $osm->addChild("user");
 
 						foreach(array("id", "display_name", "account_created") as $key)
-							{
 							$user->addAttribute($key, $result->$key);
-							}
 
 						$description = $user->addChild("description", $result->description);
 
@@ -5014,15 +3475,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5037,10 +3490,6 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
@@ -5058,21 +3507,9 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$preferences = $osm->addChild("preferences");
 
@@ -5083,9 +3520,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 					$preference = $preferences->addChild("preference");
 
 					foreach(array("k", "v") as $key)
-						{
 						$preference->addAttribute($key, $result->$key);
-						}
 					}
 
 				$query->free_result();
@@ -5094,15 +3529,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5113,10 +3540,6 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null, $key) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
@@ -5138,16 +3561,8 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 
 		$osm = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -5159,9 +3574,7 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
@@ -5172,15 +3585,7 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 
 			$resource->query("delete from preference where ((id = " . $uid . ") and (k = '" . $k . "'));");
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->query("insert into preference (id, k, v) values (" . $uid . ", '" . $k . "', '" . str_replace("'", "\'", $data) . "');");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -5190,10 +3595,6 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
@@ -5215,16 +3616,8 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 
 		$data = new SimpleXMLElement($data);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -5236,9 +3629,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
@@ -5254,16 +3645,8 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 			################################################################################
 
 			foreach($data->preferences as $preferences)
-				{
 				foreach($preferences->preference as $preference)
-					{
 					$resource->query("insert into preference (id, k, v) values (" . $uid . ", '" . $preference["k"] . "', '" . str_replace("'", "\'", $preference["v"]) . "');");
-					}
-				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -5278,10 +3661,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -5289,9 +3668,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
-			{
 			exception_bbox_missed();
-			}
 
 		################################################################################
 		# parse bbox
@@ -5304,56 +3681,38 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
-			{
 			exception_bbox_range();
-			}
 
 		################################################################################
 		# check bbox
 		################################################################################
 
 		if(($max_lat - $min_lat) * ($max_lon - $min_lon) > OSM_AREA_MAXIMUM)
-			{
 			exception_bbox_area();
-			}
 
 		################################################################################
 		# check limit
 		################################################################################
 
 		if((isset($_GET["limit"]) === true) && ((strlen($_GET["limit"]) == 0) || (is_numeric($_GET["limit"]) === false) || ($_GET["limit"] < 1) || ($_GET["limit"] > 10000)))
-			{
 			exception_limit_range();
-			}
 		elseif(isset($_GET["limit"]) === false)
-			{
 			$limit = 100;
-			}
 		else
-			{
 			$limit = $_GET["limit"];
-			}
 
 		################################################################################
 		# check closed
 		################################################################################
 
 		if(isset($_GET["closed"]) === false)
-			{
 			$closed = "(status = 'open') or ((status = 'closed') and (date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - (7 * 86400)) . "'))";
-			}
 		elseif($_GET["closed"] == 0)
-			{
 			$closed = "status = 'open'";
-			}
 		elseif($_GET["closed"] == 0 - 1)
-			{
 			$closed = "(status = 'open') or (status = 'closed')";
-			}
 		else
-			{
 			$closed = "(status = 'open') or ((status = 'closed') and (date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - ($_GET["closed"] * 86400)) . "'))";
-			}
 
 		################################################################################
 		# create default xml-file
@@ -5363,41 +3722,21 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where ((" . bboxs($min_lon, $min_lat, $max_lon, $max_lat) . ") and (" . $closed . ")) limit " . $limit . ";"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					if($result_note->status == "open")
 						{
@@ -5411,10 +3750,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -5424,9 +3759,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -5436,22 +3769,10 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				$query_note->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5467,10 +3788,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		################################################################################
@@ -5481,41 +3798,21 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where (id = " . $id . ");"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -5531,10 +3828,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -5544,9 +3837,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -5559,15 +3850,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5583,10 +3866,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 		################################################################################
@@ -5600,56 +3879,38 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		################################################################################
 
 		if((isset($_GET["lat"]) === false) || (strlen($_GET["lat"]) == 0))
-			{
 			exception_lat_missed();
-			}
 
 		################################################################################
 		# check lon
 		################################################################################
 
 		if((isset($_GET["lon"]) === false) || (strlen($_GET["lon"]) == 0))
-			{
 			exception_lon_missed();
-			}
 
 		################################################################################
 		# check text
 		################################################################################
 
 		if((isset($_GET["text"]) === false) || (strlen($_GET["text"]) == 0))
-			{
 			exception_text_missed();
-			}
 
 		################################################################################
 		# check lat
 		################################################################################
 
 		if(is_numeric($_GET["lat"]) === false)
-			{
 			exception_lat_invalid();
-			}
 
 		################################################################################
 		# check lon
 		################################################################################
 
 		if(is_numeric($_GET["lon"]) === false)
-			{
 			exception_lon_invalid();
-			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -5661,38 +3922,22 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$id = 0;
 
 			if($query = $resource->query("select max(id) from note;"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$id = $result->id;
-					}
 				}
 
 			$id = $id + 1;
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->query("insert into note (id, date_created, date_closed, status, lat, lon) values (" . $id . ", '" . date("Y-m-d\TH:i:s\Z") . "', '', 'open', " . $_GET["lat"] . ", " . $_GET["lon"] . ");");
 
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'opened', '" . str_replace("'", "\'", $_GET["text"]) . "');");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -5705,41 +3950,21 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where (id = " . $id . ");"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -5755,10 +3980,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -5768,9 +3989,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -5780,22 +3999,10 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				$query_note->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5811,10 +4018,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 		################################################################################
@@ -5828,20 +4031,10 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 		################################################################################
 
 		if((isset($_GET["text"]) === false) || (strlen($_GET["text"]) == 0))
-			{
 			exception_text_missed();
-			}
-
-		################################################################################
-		# ...
-		################################################################################
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -5853,22 +4046,12 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'commented', '" . str_replace("'", "\'", $_GET["text"]) . "');");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -5881,41 +4064,21 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where (id = " . $id . ");"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -5931,10 +4094,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -5944,9 +4103,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -5956,22 +4113,10 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 				$query_note->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -5987,10 +4132,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 		################################################################################
@@ -5999,16 +4140,8 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 
 		check_login();
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -6020,26 +4153,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'closed', '" . (isset($_GET["text"]) === false ? "" : str_replace("'", "\'", $_GET["text"])) . "');");
 
 			$resource->query("update note set date_closed = '" . date("Y-m-d\TH:i:s\Z") . "' where (id = " . $id . ");");
 
 			$resource->query("update note set status = 'closed' where (id = " . $id . ");");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -6052,41 +4175,21 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where (id = " . $id . ");"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -6102,10 +4205,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -6115,9 +4214,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -6127,22 +4224,10 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 				$query_note->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -6158,10 +4243,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 	{
 	list($null, $id) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
 		################################################################################
@@ -6170,16 +4251,8 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 
 		check_login();
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
 
 			################################################################################
@@ -6191,26 +4264,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 			if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 				{
 				while($result = $query->fetch_object())
-					{
 					$uid = $result->id;
-					}
 
 				$query->free_result();
 				}
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'reopened', '" . (isset($_GET["text"]) === false ? "" : str_replace("'", "\'", $_GET["text"])) . "');");
 
 			$resource->query("update note set date_closed = '' where (id = " . $id . ");");
 
 			$resource->query("update note set status = 'open' where (id = " . $id . ");");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			$resource->close();
 			}
@@ -6223,41 +4286,21 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query_note = $resource->query("select * from note where (id = " . $id . ");"))
 				{
 				while($result_note = $query_note->fetch_object())
 					{
-					################################################################################
-					# ...
-					################################################################################
-
 					$note = $osm->addChild("note");
 
 					foreach(array("lon", "lat") as $key)
-						{
 						$note->addAttribute($key, $result_note->$key);
-						}
 
 					foreach(array("id", "status", "date_created") as $key)
-						{
 						$note->addChild($key, $result_note->$key);
-						}
 
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -6273,10 +4316,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 						}
 
-					################################################################################
-					# ...
-					################################################################################
-
 					$comments = $note->addChild("comments");
 
 					if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -6286,9 +4325,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 							$comment = $comments->addChild("comment");
 
 							foreach(array("date", "uid", "user", "action", "text") as $key)
-								{
 								$comment->addChild($key, $result_note_comment->$key);
-								}
 							}
 
 						$query_note_comment->free_result();
@@ -6298,22 +4335,10 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 				$query_note->free_result();
 				}
 
-			################################################################################
-			# ...
-			################################################################################
-
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -6329,62 +4354,36 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 	{
 	list($null) = $matches;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# ...
-		################################################################################
-
 		if(isset($_GET["q"]) === false)
-			{
 			exception_query_missed();
-			}
 		else
-			{
 			$q = $_GET["q"];
-			}
 
 		################################################################################
 		# check limit
 		################################################################################
 
 		if(isset($_GET["limit"]) === false)
-			{
 			$limit = 100;
-			}
 		elseif((isset($_GET["limit"]) === true) && ((strlen($_GET["limit"]) == 0) || (is_numeric($_GET["limit"]) === false) || ($_GET["limit"] < 1) || ($_GET["limit"] > 10000)))
-			{
 			exception_limit_range();
-			}
 		else
-			{
 			$limit = $_GET["limit"];
-			}
 
 		################################################################################
 		# check closed
 		################################################################################
 
 		if(isset($_GET["closed"]) === false)
-			{
 			$closed = "(note.status = 'open') or ((note.status = 'closed') and (note.date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - (7 * 86400)) . "'))";
-			}
 		elseif($_GET["closed"] == 0)
-			{
 			$closed = "note.status = 'open'";
-			}
 		elseif($_GET["closed"] == 0 - 1)
-			{
 			$closed = "(note.status = 'open') or (note.status = 'closed')";
-			}
 		else
-			{
 			$closed = "(note.status = 'open') or ((note.status = 'closed') and (note.date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - ($_GET["closed"] * 86400)) . "'))";
-			}
 
 		################################################################################
 		# create default xml-file
@@ -6394,21 +4393,9 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
 
-		################################################################################
-		# ...
-		################################################################################
-
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
-			################################################################################
-			# init database connection
-			################################################################################
-
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# ...
-			################################################################################
 
 			if($query = $resource->query("select distinct note.id from note, note_comment where ((note.id = note_comment.id) and (note_comment.text like '%" . $q . "%') and (" . $closed . ")) limit " . $limit . ";"))
 				{
@@ -6418,21 +4405,13 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 						{
 						while($result_note = $query_note->fetch_object())
 							{
-							################################################################################
-							# ...
-							################################################################################
-
 							$note = $osm->addChild("note");
 
 							foreach(array("lon", "lat") as $key)
-								{
 								$note->addAttribute($key, $result_note->$key);
-								}
 
 							foreach(array("id", "status", "date_created") as $key)
-								{
 								$note->addChild($key, $result_note->$key);
-								}
 
 							$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
@@ -6448,10 +4427,6 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 								$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
 								}
 
-							################################################################################
-							# ...
-							################################################################################
-
 							$comments = $note->addChild("comments");
 
 							if($query_note_comment = $resource->query("select note_comment.*, user.display_name as user from note_comment, user where ((user.id = note_comment.uid) and (note_comment.id = " . $result_note->id . "));"))
@@ -6461,9 +4436,7 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 									$comment = $comments->addChild("comment");
 
 									foreach(array("date", "uid", "user", "action", "text") as $key)
-										{
 										$comment->addChild($key, $result_note_comment->$key);
-										}
 									}
 
 								$query_note_comment->free_result();
@@ -6480,15 +4453,7 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 			$resource->close();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$osm = $osm->asXML();
-
-		################################################################################
-		# ...
-		################################################################################
 
 		header("Content-Type: text/xml; charset=utf-8");
 
@@ -6502,71 +4467,31 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 
 function check_login()
 	{
-	################################################################################
-	# ...
-	################################################################################
-
 	if((isset($_SERVER["PHP_AUTH_USER"]) === false) || (strlen($_SERVER["PHP_AUTH_USER"]) == 0))
-		{
 		exception_auth_invalid();
-		}
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if((isset($_SERVER["PHP_AUTH_PW"]) === false) || (strlen($_SERVER["PHP_AUTH_PW"]) == 0))
-		{
 		exception_auth_invalid();
-		}
-
-	################################################################################
-	# ...
-	################################################################################
 
 	$authenticated = false;
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 		{
-		################################################################################
-		# init database connection
-		################################################################################
-
 		$resource->query("set names 'utf8';");
-
-		################################################################################
-		# ...
-		################################################################################
 
 		if($query = $resource->query("select * from user where ((id = '" . $_SERVER["PHP_AUTH_USER"] . "') or (email = '" . $_SERVER["PHP_AUTH_USER"] . "') or (display_name = '" . $_SERVER["PHP_AUTH_USER"] . "'));"))
 			{
 			while($result = $query->fetch_object())
-				{
 				$authenticated = ($result->pass == $_SERVER["PHP_AUTH_PW"]);
-				}
 
 			$query->free_result();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$resource->close();
 		}
 
-	################################################################################
-	# ...
-	################################################################################
-
 	if($authenticated === false)
-		{
 		exception_auth_invalid();
-		}
 	}
 
 ################################################################################
@@ -6581,25 +4506,17 @@ function bboxs($min_lon, $min_lat, $max_lon, $max_lat)
 function check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat)
 	{
 	if(($max_lat - $min_lat) * ($max_lon - $min_lon) > OSM_AREA_MAXIMUM)
-		{
 		return(false);
-		}
 	else
-		{
 		return(true);
-		}
 	}
 
 function check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat)
 	{
 	if(($max_lat < $min_lat) || ($max_lon < $min_lon) || ($min_lat < 0 - 90) || ($min_lat > 0 + 90) || ($max_lat < 0 - 90) || ($max_lat > 0 + 90) || ($min_lon < 0 - 180) || ($min_lon > 0 + 180) || ($max_lon < 0 - 180) || ($max_lon > 0 + 180))
-		{
 		return(false);
-		}
 	else
-		{
 		return(true);
-		}
 	}
 
 function exception($text)
@@ -6702,22 +4619,10 @@ function exception_id_differs($url_id, $xml_id)
 
 function find_id($id)
 	{
-	################################################################################
-	# ...
-	################################################################################
-
 	$retval = false;
-
-	################################################################################
-	# ...
-	################################################################################
 
 	if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 		{
-		################################################################################
-		# init database connection
-		################################################################################
-
 		$resource->query("set names 'utf8';");
 
 		################################################################################
@@ -6727,23 +4632,13 @@ function find_id($id)
 		if($query = $resource->query("select * from changeset where id = " . $id . ";"))
 			{
 			while($result = $query->fetch_object())
-				{
 				$retval = ($result->id == $id);
-				}
 
 			$query->free_result();
 			}
 
-		################################################################################
-		# ...
-		################################################################################
-
 		$resource->close();
 		}
-
-	################################################################################
-	# ...
-	################################################################################
 
 	return($retval);
 	}
