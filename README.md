@@ -19,10 +19,12 @@ some alias definition need to be made in apache configuration:
 </IfModule>
 ```
 
-geo-api.php needs access to mysql. the following tables need to be created:
+geo-api.php needs access to mysql. 
+he following tables need to be created:
 
-* changesets (id)
-* node (id, version, changeset)
++ user (id)
+* changeset (id, user, timestamp)
+* node (id, version, changeset, lon, lat)
 * node_tag(id, version, k, v)
 * way (id, version, changeset)
 * way_nd (id, version, ref)
