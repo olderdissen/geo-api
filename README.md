@@ -18,3 +18,15 @@ some alias definition need to be made in apache configuration:
 	Alias /apimap /var/www/geo-api.php
 </IfModule>
 ```
+
+geo-api.php needs access to mysql. the following tables need to be created:
+
+* changesets (id)
+* node (id, version, changeset)
+* node_tag(id, version, k, v)
+* way (id, version, changeset)
+* way_nd (id, version, ref)
+* way_tag(id, version, k, v)
+* relation (id, version, changeset)
+* relation_member (id, version, type, ref, role)
+* relation_tag (id, version, k, v)
