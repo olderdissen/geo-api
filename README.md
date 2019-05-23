@@ -9,7 +9,8 @@ simple open streeet map geo server with mysql database
 
 ## configuration
 
-apache need some extra configuration. mod_alias need to be enabled. some alias definition need to be made:
+apache need some extra configuration. **mod_alias** need to be enabled.
+some alias definition need to be made in apache configuration:
 
 ```
 <IfModule mod_alias.c>
