@@ -29,3 +29,4 @@ geo-api.php needs access to mysql. the following tables need to be created:
 - relation (id, version, changeset)
 - relation_member (id, version, type, ref, role)
 - relation_tag (id, version, k, v)
+

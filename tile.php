@@ -18,12 +18,12 @@ include("google_projection.php");
 
 define("FORCE_REDRAW", true);
 
-if($resource = new mysqli("127.0.0.1", "root", "34096", "osm", "3306"))
+if($resource = new mysqli("192.168.147.166", "root", "34096", "osm", "3306"))
 	$resource->query("set names 'utf8';");
 
 $timestamp = 0;
 
-# printx(create_tile_data(17,68671,43278));exit;
+# printx(create_tile_data(15, 17170, 10820));exit;
 
 ################################################################################
 # ...
@@ -116,10 +116,6 @@ function create_tile($zoom, $x, $y)
 	if(is_dir($folder) === false)
 		mkdir($folder);
 
-	chmod($folder, 0777);
-	chown($folder, "nomatrix");
-	chgrp($folder, "nomatrix");
-
 	################################################################################
 	# create folder for zoom / x
 	################################################################################
@@ -128,10 +124,6 @@ function create_tile($zoom, $x, $y)
 
 	if(is_dir($folder) === false)
 		mkdir($folder);
-
-	chmod($folder, 0777);
-	chown($folder, "nomatrix");
-	chgrp($folder, "nomatrix");
 
 	################################################################################
 	# create file for zoom / x / y
@@ -161,10 +153,6 @@ function create_tile($zoom, $x, $y)
 		exec("inkscape --export-area-page --without-gui --export-dpi=90 --export-png=" . $file . ".png " . $file . ".svg");
 
 		unlink($file . ".svg");
-
-		chmod($file . ".png", 0777);
-		chown($file . ".png", "nomatrix");
-		chgrp($file . ".png", "nomatrix");
 		}
 
 	print(" (" . number_format(microtime(true) - $microtime, 3, ".", "") . ")\n");
@@ -271,6 +259,8 @@ function x_create_tiles_by_changeset($id)
 			$query->free_result();
 			}
 
+		$got_pos = true;
+
 		if($got_pos === true)
 			{
 			$p = new google_projection(20);
@@ -293,10 +283,11 @@ function x_create_tiles_by_changeset($id)
 				}
 			}
 
+		$got_run = false;
+
 		while($got_run === false)
 			{
 			$got_run = true;
-
 			if($query = $resource->query("select * from tile order by z desc, x asc, y asc limit 1;"))
 				{
 				while($result = $query->fetch_object())
@@ -668,7 +659,8 @@ function create_tile_data($zoom, $x, $y)
 								if($font_size[$zoom] == 0)
 									continue;
 
-								$color = array(
+								$color = array
+									(
 									"*" => "none",
 									"arts_centre" => "#beadad",
 									"grave_yard" => "url(#grave_yard)",
@@ -700,7 +692,8 @@ function create_tile_data($zoom, $x, $y)
 
 							if($type == "boundary")
 								{
-								$color = array(
+								$color = array
+									(
 									"*" => "none",
 									"administrative" => "purple",
 									"cadastre" => "blue",
@@ -714,8 +707,25 @@ function create_tile_data($zoom, $x, $y)
 								$color = (isset($color[$sorter]) === false ? $color["*"] : $color[$sorter]);
 
 								$admin_level = (isset($properties["admin_level"]) === false ? 11 : $properties["admin_level"]);
-								$widths = array(0, 0, 7, 5, 4, 2, 2, 2, 2, 2, 2, 2, 0);
-								$dasharrays = array(array(0, 0), array(0, 0), array(1, 0), array(5, 2), array(4, 3), array(6, 3, 2, 3, 2, 3), array(6, 3, 2, 3), array(5, 2), array(5, 2), array(2, 3), array(2, 3), array(2, 3), array(0, 0));
+
+								$widths = array(0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0);
+
+								$dasharrays = array
+									(
+									array(0, 0),
+									array(0, 0),
+									array(1, 0),
+									array(5, 2),
+									array(4, 3),
+									array(6, 3, 2, 3, 2, 3),
+									array(6, 3, 2, 3),
+									array(5, 2),
+									array(5, 2),
+									array(2, 3),
+									array(2, 3),
+									array(2, 3),
+									array(0, 0)
+									);
 
 								################################################################################
 								# glue waypoints
@@ -1828,7 +1838,7 @@ function get_text_size($font_family, $font_size, $string)
 	{
 	# font must be 0755
 
-	$data = imagettfbbox($font_size, 0, "/usr/share/fonts/truetype/arkpandora/" . $font_family . ".ttf", $string);
+	$data = imagettfbbox($font_size, 0, __DIR__ . "/" . $font_family . ".ttf", $string);
 
 	$min_x = min(array($data[0], $data[2], $data[4], $data[6]));
 	$max_x = max(array($data[0], $data[2], $data[4], $data[6]));
