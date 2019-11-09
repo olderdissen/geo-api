@@ -1,5 +1,11 @@
 <?
-define("OSM_HOST", "192.168.147.164");
+################################################################################
+# copyright 2011 - 2019 by Markus Olderdissen
+# free for private use or inspiration. 
+# public use need written permission.
+################################################################################
+
+define("OSM_HOST", "192.168.147.166");
 define("OSM_PORT", "3306");
 define("OSM_USER", "root");
 define("OSM_PASS", "34096");
@@ -18,27 +24,11 @@ define("OSM_TIMEOUT_SECONDS", 300);
 
 # "select a.field from " . OSM_NAME . ".table as a where (a.field = 1);"
 
-################################################################################
-# set a maximum timeout
-################################################################################
-
 ini_set("max_execution_time", 180);
-
-################################################################################
-# set default timezone
-################################################################################
 
 date_default_timezone_set("UTC");
 
-################################################################################
-# ...
-################################################################################
-
 #header_remove("X-Powered-By");
-
-################################################################################
-# check login
-################################################################################
 
 #check_login();
 
@@ -93,10 +83,6 @@ if(preg_match("/api\/user\/(.*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			{
 			$resource->query("set names 'utf8';");
 
-			################################################################################
-			# get uid by login
-			################################################################################
-
 			$uid = 0;
 
 			if($query = $resource->query("select * from user where ((id = '" . $id . "') or (display_name = '" . $id . "') or (email = '" . $id . "'));"))
@@ -127,10 +113,6 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -139,15 +121,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			{
 			$resource->query("set names 'utf8';");
 
-			################################################################################
-			# init a default table for node, way and relation
-			################################################################################
-
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
-
-			################################################################################
-			# get all nodes and ways
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -160,10 +134,6 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					}
 				}
 
-			################################################################################
-			# get all nodes of ways
-			################################################################################
-
 			foreach($trans["way"] as $id => $version)
 				{
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.id = " . $id . ") and (way_nd.version = " . $version . ") and (way_nd.ref = node.id) and (node.visible = 'true'));"))
@@ -175,16 +145,8 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					}
 				}
 
-			################################################################################
-			# sort everything
-			################################################################################
-
 			foreach(array("node", "way", "relation") as $type)
 				ksort($trans[$type]);
-
-			################################################################################
-			# draw everything
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -197,15 +159,11 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 							$node = $osm->addChild($type);
 
 							if($type == "node")
-								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid", "lat", "lon") as $key)
 									$node->addAttribute($key, $result->$key);
-								}
 							else
-								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid") as $key)
 									$node->addAttribute($key, $result->$key);
-								}
 
 							if($type == "way")
 								{
@@ -262,6 +220,7 @@ if(preg_match("/api\/export\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -277,10 +236,6 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -289,15 +244,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 			{
 			$resource->query("set names 'utf8';");
 
-			################################################################################
-			# init a default table for node, way and relation
-			################################################################################
-
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
-
-			################################################################################
-			# get all nodes and ways
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -310,10 +257,6 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 					}
 				}
 
-			################################################################################
-			# get all nodes of ways
-			################################################################################
-
 			foreach($trans["way"] as $id => $version)
 				{
 				if($query = $resource->query("select node.* from node, way_nd where ((way_nd.id = " . $id . ") and (way_nd.version = " . $version . ") and (way_nd.ref = node.id) and (node.visible = 'true'));"))
@@ -325,18 +268,8 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 					}
 				}
 
-			################################################################################
-			# sort everything
-			################################################################################
-
 			foreach(array("node", "way", "relation") as $type)
-				{
 				ksort($trans[$type]);
-				}
-
-			################################################################################
-			# draw everything
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -414,6 +347,7 @@ if(preg_match("/api\/export\/(\w*)\/(\w*)$/", $_SERVER["PHP_SELF"], $matches) ==
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -429,27 +363,16 @@ if(preg_match("/api\/(\d*)\/(\d*)\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# trigger external tile creation
-		################################################################################
-
 		if(isset($_GET["dirty"]) === true)
-			exec("sudo php tile.php " . $z . " " . $x . " " . $y . " > /dev/null &");
-
-		################################################################################
-		# get tiles content
-		################################################################################
+			exec("sudo php tile.php " . $z . " " . $x . " " . $y . " > /dev/null");
 
 		if(file_exists("tiles/" . $z . "/" . $x . "/" . $y . ".png") === false)
 			$data = file_get_contents("index.png");
 		else
 			$data = file_get_contents("tiles/" . $z . "/" . $x . "/" . $y . ".png");
 
-		################################################################################
-		# show tile
-		################################################################################
-
 		header("Content-Type: image/png");
+		header("Content-Length: " . strlen($data));
 
 		print($data);
 		}
@@ -466,10 +389,6 @@ if(preg_match("/api\/capabilities$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -503,6 +422,7 @@ if(preg_match("/api\/capabilities$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -530,42 +450,18 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# check bbox
-		################################################################################
 
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
 			exception_bbox_missed();
 
-		################################################################################
-		# parse bbox
-		################################################################################
-
 		list($min_lon, $min_lat, $max_lon, $max_lat) = explode(",", $_GET["bbox"]);
-
-		################################################################################
-		# check bbox
-		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
 			exception_bbox_range();
 
-		################################################################################
-		# check bbox
-		################################################################################
-
 		if(check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat) === false)
 			exception_bbox_area();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -581,15 +477,7 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			{
 			$resource->query("set names 'utf8';");
 
-			################################################################################
-			# init a default table for node, way and relation
-			################################################################################
-
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
-
-			################################################################################
-			# get all nodes of bbox
-			################################################################################
 
 			if($query = $resource->query("select * from node where ((" . bboxs($min_lon, $min_lat, $max_lon, $max_lat) . ") and (visible = 'true'));"))
 				{
@@ -598,10 +486,6 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 				$query->free_result();
 				}
-
-			################################################################################
-			# get all ways of nodes
-			################################################################################
 
 			foreach($trans["node"] as $id => $version)
 				{
@@ -613,10 +497,6 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					$query->free_result();
 					}
 				}
-
-			################################################################################
-			# get all nodes of ways
-			################################################################################
 
 			foreach($trans["way"] as $id => $version)
 				{
@@ -630,10 +510,6 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				}
 
 			# Error: You requested too many nodes (limit is 50000). Either request a smaller area, or use planet.osm
-
-			################################################################################
-			# get all relations of nodes and ways
-			################################################################################
 
 			foreach(array("node", "way") as $type)
 				{
@@ -649,16 +525,8 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					}
 				}
 
-			################################################################################
-			# sort everything
-			################################################################################
-
 			foreach(array("node", "way", "relation") as $type)
 				ksort($trans[$type]);
-
-			################################################################################
-			# draw everything
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -671,15 +539,11 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 							$node = $osm->addChild($type);
 
 							if($type == "node")
-								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid", "lat", "lon") as $key)
 									$node->addAttribute($key, $result->$key);
-								}
 							else
-								{
 								foreach(array("id", "visible", "version", "changeset", "timestamp", "user", "uid") as $key)
 									$node->addAttribute($key, $result->$key);
-								}
 
 							if($type == "way")
 								{
@@ -735,15 +599,16 @@ if(preg_match("/api\/0\.6\/map$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$resource->close();
 			}
 
-		$osm->addAttribute("time", microtime(true) - $microtime);
+#		$osm->addAttribute("time", microtime(true) - $microtime);
 
-		foreach(array("node", "way", "relation") as $key)
-			$osm->addAttribute($key . "s", count($osm->$key));
+#		foreach(array("node", "way", "relation") as $key)
+#			$osm->addAttribute($key . "s", count($osm->$key));
 
 		$osm = $osm->asXML();
 
 		header("Content-Disposition: inline; filename=\"map.osm\"");
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -760,10 +625,6 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -794,6 +655,7 @@ if(preg_match("/api\/0\.6\/permissions$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -810,31 +672,15 @@ if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches)
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -846,13 +692,9 @@ if(preg_match("/api\/0\.6\/changeset\/create$/", $_SERVER["PHP_SELF"], $matches)
 				$query->free_result();
 				}
 
-			################################################################################
-			# get free id
-			################################################################################
-
 			$id = 0;
 
-			if($query = $resource->query("select max(id) from changeset;"))
+			if($query = $resource->query("select max(id) as id from changeset;"))
 				{
 				while($result = $query->fetch_object())
 					$id = $result->id;
@@ -892,10 +734,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -918,10 +756,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 						$changeset->addAttribute($key, $result_changeset->$key);
 						}
 
-					################################################################################
-					# discussions? i hate them!
-					################################################################################
-
 					$changeset->addAttribute("comments_count", 0);
 
 					if($query_changeset_tag = $resource->query("select * from changeset_tag where (id = " . $result_changeset->id . ") order by k asc;"))
@@ -936,10 +770,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 
 						$query_changeset_tag->free_result();
 						}
-
-					################################################################################
-					# discussions? i hate them!
-					################################################################################
 
 					if((isset($_GET["include_discussion"]) === true) && (strlen($_GET["include_discussion"]) != 0))
 						{
@@ -971,6 +801,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -987,21 +818,9 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) 
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
@@ -1031,10 +850,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
 		$got_pos = false;
@@ -1048,15 +863,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 			$max_lon = 0 - 180;
 			$max_lat = 0 -  90;
 
-			################################################################################
-			# get coordinates of node
-			################################################################################
-
 			if($query = $resource->query("select * from node where (changeset = " . $id . ");"))
 				{
 				while($result = $query->fetch_object())
 					{
-					if($query_node = $resource->query("select * from node where ((id = " . $result->id . ") and (version in (" . ($result->version - 0) . ", " . ($result->version - 1) . ")));"))
+					if($query_node = $resource->query("select * from node where ((id = " . $result->id . ") and (version = " . $result->version . "));"))
 						{
 						while($result_node = $query_node->fetch_object())
 							{
@@ -1075,15 +886,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 				$query->free_result();
 				}
 
-			################################################################################
-			# get coordinates of way
-			################################################################################
-
 			if($query = $resource->query("select * from way where (changeset = " . $id . ");"))
 				{
 				while($result = $query->fetch_object())
 					{
-					if($query_way = $resource->query("select * from way where ((id = " . $result->id . ") and (version in (" . ($result->version - 0) . ", " . ($result->version - 1) . ")));"))
+					if($query_way = $resource->query("select * from way where ((id = " . $result->id . ") and (version in (" . $result->version . ", " . ($result->version - 1) . ")));"))
 						{
 						while($result_way = $query_way->fetch_object())
 							{
@@ -1118,28 +925,19 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 				$query->free_result();
 				}
 
-			################################################################################
-			# get coordinates of relation
-			################################################################################
-
 			if($query = $resource->query("select * from relation where (changeset = " . $id . ");"))
 				{
 				while($result = $query->fetch_object())
 					{
-					if($query_relation = $resource->query("select * from relation where ((id = " . $result->id . ") and (version in (" . ($result->version - 0) . ", " . ($result->version - 1) . ")));"))
+					if($query_relation = $resource->query("select * from relation where ((id = " . $result->id . ") and (version = " . $result->version . "));"))
 						{
 						while($result_relation = $query_relation->fetch_object())
 							{
-							if($query_relation_member = $resource->query("select * from relation_member where ((id = " . $result_relation->id . ") and ((version = " . $result_relation->version . "));"))
+							if($query_relation_member = $resource->query("select * from relation_member where ((id = " . $result_relation->id . ") and (version = " . $result_relation->version . "));"))
 								{
 								while($result_relation_member = $query_relation_member->fetch_object())
 									{
-									################################################################################
-									# get the node referenced by ref of relation member
-									# where its changeset id is equal or smaller then the realtions one
-									################################################################################
-
-									if($result_relation_member->type = "node")
+									if($result_relation_member->type == "node")
 										{
 										if($query_node = $resource->query("select * from node where ((id = " . $result_relation_member->ref . ") and (changeset <= " . $result_relation->changeset . ")) order by changeset desc limit 1;"))
 											{
@@ -1157,12 +955,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 											}
 										}
 
-									################################################################################
-									# get the way referenced by ref of relation member
-									# where its changeset id is equal or smaller then the realtions one
-									################################################################################
-
-									if($result_relation_member->type = "way")
+									if($result_relation_member->type == "way")
 										{
 										if($query_way = $resource->query("select * from way where ((id = " . $result_relation_member->ref . ") and (changeset <= " . $result_relation->changeset . ")) order by changeset desc limit 1;"))
 											{
@@ -1196,7 +989,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 											}
 										}
 
-									if($result_relation_member->type = "relation")
+									if($result_relation_member->type == "relation")
 										{
 										# noone cares this
 										}
@@ -1213,7 +1006,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 				$query->free_result();
 				}
 
-			if($got_pos === true)
+			if($got_pos)
 				foreach(array("min_lat" => $min_lat, "min_lon" => $min_lon, "max_lat" => $max_lat, "max_lon" => $max_lon) as $key => $value)
 					$resource->query("update changeset set " . $key . " = " . $value . " where (id = " . $id . ");");
 
@@ -1226,7 +1019,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $ma
 		# trigger external tile creation
 		################################################################################
 
-		if($got_pos === true)
+		if($got_pos)
 			exec("sudo php tile.php " . $id . " > /dev/null &");
 		}
 	}
@@ -1242,10 +1035,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osmChange />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -1280,15 +1069,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 							}
 
 						if($type == "node")
-							{
 							foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
 								$action_node->addAttribute($key, $result->$key);
-							}
 						else
-							{
 							foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
 								$action_node->addAttribute($key, $result->$key);
-							}
 
 						if($type == "way")
 							{
@@ -1344,10 +1129,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 			$resource->close();
 			}
 
-		################################################################################
-		# delete unused nodes
-		################################################################################
-
 		foreach(array("create", "modify", "delete") as $action)
 			{
 			if(count($osm->$action->children()) != 0)
@@ -1359,6 +1140,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/download$/", $_SERVER["PHP_SELF"], 
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -1374,21 +1156,9 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/expand_bbox$/", $_SERVER["PHP_SELF"
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get content of upload
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# parse uploaded data
-		################################################################################
 
 		$data = new SimpleXMLElement($data);
 
@@ -1430,38 +1200,18 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		{
 		$search = array();
 
-		################################################################################
-		# check bbox
-		################################################################################
-
 		if(isset($_GET["bbox"]) === true)
 			{
-			################################################################################
-			# check bbox
-			################################################################################
-
 			if((strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
 				exception_bbox_missed();
 
-			################################################################################
-			# parse bbox
-			################################################################################
-
 			list($min_lon, $min_lat, $max_lon, $max_lat) = explode(",", $_GET["bbox"]);
-
-			################################################################################
-			# check bbox
-			################################################################################
 
 			if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
 				exception_bbox_range();
 
 			$search[] = "((changeset.min_lon < " . $max_lon . ") and (changeset.min_lat < " . $max_lat . ") and (changeset.max_lon > " . $min_lon . ") and (changeset.max_lat > " . $min_lat . "))";
 			}
-
-		################################################################################
-		# check user
-		################################################################################
 
 		if(isset($_GET["user"]) === true)
 			{
@@ -1470,10 +1220,6 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 			$search[] = "(changeset.uid = " . $_GET["user"] . ")"; # original api does not provide search by display_name
 			}
-
-		################################################################################
-		# check time
-		################################################################################
 
 		if(isset($_GET["time"]) === true)
 			{
@@ -1495,23 +1241,11 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 				}
 			}
 
-		################################################################################
-		# check open
-		################################################################################
-
 		if(isset($_GET["open"]) === true)
 			$search[] = "(changeset.closed_at is null)";
 
-		################################################################################
-		# check closed
-		################################################################################
-
 		if(isset($_GET["closed"]) === true)
 			$search[] = "(changeset.closed_at is not null)";
-
-		################################################################################
-		# check changesets
-		################################################################################
 
 		if(isset($_GET["changesets"]) === true)
 			{
@@ -1520,10 +1254,6 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 			$search[] = "(changeset.id in (" . $_GET["changesets"] . "))";
 			}
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -1570,6 +1300,7 @@ if(preg_match("/api\/0\.6\/changesets$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -1588,29 +1319,13 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get content of upload
-		################################################################################
-
 		$osm_change = file_get_contents("php://input");
-
-		################################################################################
-		# create new diff result
-		################################################################################
 
 		$diff = new SimpleXMLElement("<diffResult />");
 		$diff->addAttribute("version", OSM_VERSION);
 		$diff->addAttribute("generator", OSM_GENERATOR);
-
-		################################################################################
-		# parse uploaded data
-		################################################################################
 
 		$osm_change = new SimpleXMLElement($osm_change);
 
@@ -1623,20 +1338,12 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 #				$resource->query("lock tables " . $type . " write;");
 				}
 
-			################################################################################
-			# init a default table for node, way and relation
-			################################################################################
-
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
 
 #			header($_SERVER["SERVER_PROTOCOL"] . " 412 Precondition failed");
 #			header("Content-Type: text/plain; charset=utf-8");
 #			header("Error: Node 0 is still used by way 0.");
 #			die("Node 0 is still used by way 0.");
-
-			################################################################################
-			# create diff-file
-			################################################################################
 
 			foreach($osm_change as $action)
 				{
@@ -1646,19 +1353,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 					{
 					$type_name = $type->getName();
 
-					################################################################################
-					# create
-					################################################################################
-
 					if($action_name == "create")
 						{
-						################################################################################
-						# get last known id
-						################################################################################
-
 						$id = 0;
 
-						if($query = $resource->query("select max(id) from " . $type_name . ";"))
+						if($query = $resource->query("select max(id) as id from " . $type_name . ";"))
 							{
 							while($result = $query->fetch_object())
 								$id = $result->id;
@@ -1683,10 +1382,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 						$trans[$type_name][$old_id] = $new_id;
 						}
 
-					################################################################################
-					# delete
-					################################################################################
-
 					if($action_name == "delete")
 						{
 						$old_id = intval($type["id"]);
@@ -1703,10 +1398,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 
 						$type->addAttribute("visible", "false"); # better to change after upload? will there be a new version after all?
 						}
-
-					################################################################################
-					# modify
-					################################################################################
 
 					if($action_name == "modify")
 						{
@@ -1725,21 +1416,11 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 						$type->addAttribute("visible", "true"); # better to change after upload?
 						}
 
-					################################################################################
-					# hide old version
-					# why do we touch the old versions?
-					# do we need to hide the old versions?
-					################################################################################
-
 					if($action_name == "modify")
 						$resource->query("update " . $type_name . " set visible = 'false' where ((id = " . $old_id . ") and (version = " . $old_version . "));");
 
 					if($action_name == "delete")
 						$resource->query("update " . $type_name . " set visible = 'false' where ((id = " . $old_id . ") and (version = " . $old_version . "));");
-
-					################################################################################
-					# insert new version
-					################################################################################
 
 					if($type_name == "node")
 						{
@@ -1769,10 +1450,6 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 
 					if($type_name == "relation")
 						$resource->query("insert into relation (id, version, changeset, timestamp, visible) values (" . $new_id . ", " . $new_version . ", " . $type["changeset"] . ", '" . date("Y-m-d\TH:i:s\Z") . "', '" . $type["visible"] . "');");
-
-					################################################################################
-					# insert new version
-					################################################################################
 
 					if(($action_name == "create") || ($action_name == "modify"))
 						{
@@ -1817,6 +1494,7 @@ if(preg_match("/api\/0\.6\/changeset\/(\d*)\/upload$/", $_SERVER["PHP_SELF"], $m
 		$diff = $diff->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($diff));
 
 		print($diff);
 		}
@@ -1860,21 +1538,9 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
@@ -1884,13 +1550,9 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/create$/", $_SERVER["PHP_SELF"],
 
 			foreach($osm->$type as $helper)
 				{
-				################################################################################
-				# get last known id
-				################################################################################
-
 				$id = 0;
 
-				if($query = $resource->query("select max(id) from " . $type . ";"))
+				if($query = $resource->query("select max(id) as id from " . $type . ";"))
 					{
 					while($result = $query->fetch_object())
 						$id = $result->id;
@@ -1955,10 +1617,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -1974,15 +1632,11 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 					$node = $osm->addChild($type);
 
 					if($type == "node")
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 					else
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 
 					if($type == "way")
 						{
@@ -2039,6 +1693,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2058,21 +1713,9 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
@@ -2141,21 +1784,9 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)$/", $_SERVER["PHP_SELF"], 
 
 	if($_SERVER["REQUEST_METHOD"] == "DELETE")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
@@ -2203,10 +1834,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -2224,15 +1851,11 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 					$result->visible = "true"; # things are always visible
 
 					if($type == "node")
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 					else
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 
 					if($type == "way")
 						{
@@ -2289,6 +1912,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/history$/", $_SERVER["PHP
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2305,10 +1929,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -2326,15 +1946,11 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 					$result->visible = "true"; # things are always visible
 
 					if($type == "node")
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 					else
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 
 					if($type == "way")
 						{
@@ -2391,6 +2007,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/(\d*)$/", $_SERVER["PHP_S
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2408,13 +2025,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
 		if((isset($_GET[$type . "s"]) === false) || (strlen($_GET[$type . "s"]) == 0))
-			{
 			exception_object_missed($type);
-			}
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -2439,16 +2050,12 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 						}
 
 					if($type == "node")
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp", "lat", "lon") as $key)
 							$node->addAttribute($key, $result->$key);
 
-						}
 					else
-						{
 						foreach(array("id", "version", "changeset", "uid", "user", "visible", "timestamp") as $key)
 							$node->addAttribute($key, $result->$key);
-						}
 
 					if($type == "way")
 						{
@@ -2505,6 +2112,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)s$/", $_SERVER["PHP_SELF"], $match
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2521,10 +2129,6 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -2578,6 +2182,7 @@ if(preg_match("/api\/0\.6\/(node|way|relation)\/(\d*)\/relations$/", $_SERVER["P
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2594,10 +2199,6 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -2651,6 +2252,7 @@ if(preg_match("/api\/0\.6\/node\/(\d*)\/ways$/", $_SERVER["PHP_SELF"], $matches)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2669,10 +2271,6 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -2680,10 +2278,6 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# init a default table for node, way and relation
-			################################################################################
 
 			$trans = array("node" => array(), "way" => array(), "relation" => array());
 
@@ -2733,16 +2327,8 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 					}
 				}
 
-			################################################################################
-			# sort everything
-			################################################################################
-
 			foreach(array("node", "way", "relation") as $type)
 				ksort($trans[$type]);
-
-			################################################################################
-			# draw everything
-			################################################################################
 
 			foreach(array("node", "way", "relation") as $type)
 				{
@@ -2825,6 +2411,7 @@ if(preg_match("/api\/0\.6\/(way|relation)\/(\d*)\/full$/", $_SERVER["PHP_SELF"],
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -2849,36 +2436,16 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# chek bbox
-		################################################################################
-
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
 			exception_bbox_missed();
 
-		################################################################################
-		# parse bbox
-		################################################################################
-
 		list($min_lon, $min_lat, $max_lon, $max_lat) = explode(",", $_GET["bbox"]);
-
-		################################################################################
-		# check bbox
-		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
 			exception_bbox_range();
 
-		################################################################################
-		# check bbox
-		################################################################################
-
 		if(check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat) === false)
 			exception_bbox_area();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$gpx = new SimpleXMLElement("<gpx />");
 		$gpx->addAttribute("version", "1.0");
@@ -2895,18 +2462,10 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 				while($result = $query->fetch_object())
 					{
-					################################################################################
-					# check id of track
-					################################################################################
-
 					if($t != $result->id)
 						$trk = $gpx->addChild("trk");
 
 					$t = $result->id + 0;
-
-					################################################################################
-					# check z of track-segment
-					################################################################################
 
 					if($z != $result->z)
 						$trkseg = $trk->addChild("trkseg");
@@ -2938,6 +2497,7 @@ if(preg_match("/api\/0\.6\/trackpoints$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 		header("Content-Disposition: inline; filename=\"tracks.gpx\"");
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($gpx));
 
 		print($gpx);
 		}
@@ -2953,27 +2513,15 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
 		$gpx = ($_FILES["file"]["tmp_name"] == "" ? "<gpx />" : file_get_contents($_FILES["file"]["tmp_name"]));
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$gpx = new SimpleXMLElement($gpx);
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -2984,10 +2532,6 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 				$query->free_result();
 				}
-
-			################################################################################
-			# get free id
-			################################################################################
 
 			$id = 0;
 
@@ -3035,11 +2579,6 @@ if(preg_match("/api\/0\.6\/gpx\/create$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					}
 				}
 
-			################################################################################
-			# ...
-			# prepare for multiple trkseg
-			################################################################################
-
 			$t = 0;
 			$z = 0;
 
@@ -3078,15 +2617,7 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3125,6 +2656,7 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/details$/", $_SERVER["PHP_SELF"], $matche
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3140,15 +2672,7 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$gpx = new SimpleXMLElement("<gpx />");
 		$gpx->addAttribute("version", "1.0");
@@ -3172,10 +2696,6 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 
 						while($result_gpx_trackpoint = $query_gpx_trackpoint->fetch_object())
 							{
-							################################################################################
-							# check z of track-segment
-							################################################################################
-
 							if($z != $result_gpx_trackpoint->z)
 								$trkseg = $trk->addChild("trkseg");
 
@@ -3202,6 +2722,7 @@ if(preg_match("/api\/0\.6\/gpx\/(\d*)\/data$/", $_SERVER["PHP_SELF"], $matches) 
 
 		header("Content-Disposition: inline; filename=\"tracks.gpx\"");
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($gpx));
 
 		print($gpx);
 		}
@@ -3217,15 +2738,7 @@ if(preg_match("/api\/0\.6\/user\/gpx_files$/", $_SERVER["PHP_SELF"], $matches) =
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3264,6 +2777,7 @@ if(preg_match("/api\/0\.6\/user\/gpx_files$/", $_SERVER["PHP_SELF"], $matches) =
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3279,10 +2793,6 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -3347,6 +2857,7 @@ if(preg_match("/api\/0\.6\/user\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3362,15 +2873,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3478,6 +2981,7 @@ if(preg_match("/api\/0\.6\/user\/details$/", $_SERVER["PHP_SELF"], $matches) == 
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3493,15 +2997,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3532,6 +3028,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3543,31 +3040,15 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 
 	if($_SERVER["REQUEST_METHOD"] == "PUT")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement($data);
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -3579,12 +3060,7 @@ if(preg_match("/api\/0\.6\/user\/preferences\/(\w*)$/", $_SERVER["PHP_SELF"], $m
 				$query->free_result();
 				}
 
-			################################################################################
-			# delete previous setting
-			################################################################################
-
 			$resource->query("delete from preference where ((id = " . $uid . ") and (k = '" . $k . "'));");
-
 			$resource->query("insert into preference (id, k, v) values (" . $uid . ", '" . $k . "', '" . str_replace("'", "\'", $data) . "');");
 
 			$resource->close();
@@ -3598,31 +3074,15 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
-		################################################################################
-		# get uploaded data
-		################################################################################
-
 		$data = file_get_contents("php://input");
-
-		################################################################################
-		# parse uploaded data
-		################################################################################
 
 		$data = new SimpleXMLElement($data);
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -3634,15 +3094,7 @@ if(preg_match("/api\/0\.6\/user\/preferences$/", $_SERVER["PHP_SELF"], $matches)
 				$query->free_result();
 				}
 
-			################################################################################
-			# delete all previous settings
-			################################################################################
-
 			$resource->query("delete from preference where (id = " . $uid . ");");
-
-			################################################################################
-			# save uploaded settings
-			################################################################################
 
 			foreach($data->preferences as $preferences)
 				foreach($preferences->preference as $preference)
@@ -3663,36 +3115,16 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# check bbox
-		################################################################################
-
 		if((isset($_GET["bbox"]) === false) || (strlen($_GET["bbox"]) == 0) || (count(explode(",", $_GET["bbox"])) != 4))
 			exception_bbox_missed();
 
-		################################################################################
-		# parse bbox
-		################################################################################
-
 		list($min_lon, $min_lat, $max_lon, $max_lat) = explode(",", $_GET["bbox"]);
-
-		################################################################################
-		# check bbox
-		################################################################################
 
 		if(check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat) === false)
 			exception_bbox_range();
 
-		################################################################################
-		# check bbox
-		################################################################################
-
 		if(($max_lat - $min_lat) * ($max_lon - $min_lon) > OSM_AREA_MAXIMUM)
 			exception_bbox_area();
-
-		################################################################################
-		# check limit
-		################################################################################
 
 		if((isset($_GET["limit"]) === true) && ((strlen($_GET["limit"]) == 0) || (is_numeric($_GET["limit"]) === false) || ($_GET["limit"] < 1) || ($_GET["limit"] > 10000)))
 			exception_limit_range();
@@ -3700,10 +3132,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$limit = 100;
 		else
 			$limit = $_GET["limit"];
-
-		################################################################################
-		# check closed
-		################################################################################
 
 		if(isset($_GET["closed"]) === false)
 			$closed = "(status = 'open') or ((status = 'closed') and (date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - (7 * 86400)) . "'))";
@@ -3713,10 +3141,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$closed = "(status = 'open') or (status = 'closed')";
 		else
 			$closed = "(status = 'open') or ((status = 'closed') and (date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - ($_GET["closed"] * 86400)) . "'))";
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3739,16 +3163,16 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 						$note->addChild($key, $result_note->$key);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -3775,6 +3199,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3790,10 +3215,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 
 	if($_SERVER["REQUEST_METHOD"] == "GET")
 		{
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -3817,16 +3238,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -3853,6 +3274,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)$/", $_SERVER["PHP_SELF"], $matches) == 1
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -3868,43 +3290,19 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# check lat
-		################################################################################
 
 		if((isset($_GET["lat"]) === false) || (strlen($_GET["lat"]) == 0))
 			exception_lat_missed();
 
-		################################################################################
-		# check lon
-		################################################################################
-
 		if((isset($_GET["lon"]) === false) || (strlen($_GET["lon"]) == 0))
 			exception_lon_missed();
-
-		################################################################################
-		# check text
-		################################################################################
 
 		if((isset($_GET["text"]) === false) || (strlen($_GET["text"]) == 0))
 			exception_text_missed();
 
-		################################################################################
-		# check lat
-		################################################################################
-
 		if(is_numeric($_GET["lat"]) === false)
 			exception_lat_invalid();
-
-		################################################################################
-		# check lon
-		################################################################################
 
 		if(is_numeric($_GET["lon"]) === false)
 			exception_lon_invalid();
@@ -3912,10 +3310,6 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -3927,7 +3321,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 
 			$id = 0;
 
-			if($query = $resource->query("select max(id) from note;"))
+			if($query = $resource->query("select max(id) as id from note;"))
 				{
 				while($result = $query->fetch_object())
 					$id = $result->id;
@@ -3936,15 +3330,10 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 			$id = $id + 1;
 
 			$resource->query("insert into note (id, date_created, date_closed, status, lat, lon) values (" . $id . ", '" . date("Y-m-d\TH:i:s\Z") . "', '', 'open', " . $_GET["lat"] . ", " . $_GET["lon"] . ");");
-
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'opened', '" . str_replace("'", "\'", $_GET["text"]) . "');");
 
 			$resource->close();
 			}
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -3969,16 +3358,16 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -4005,6 +3394,7 @@ if(preg_match("/api\/0\.6\/notes$/", $_SERVER["PHP_SELF"], $matches) == 1)
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -4020,15 +3410,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
-
-		################################################################################
-		# check text
-		################################################################################
 
 		if((isset($_GET["text"]) === false) || (strlen($_GET["text"]) == 0))
 			exception_text_missed();
@@ -4036,10 +3418,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -4056,10 +3434,6 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 			$resource->close();
 			}
 
-		################################################################################
-		# create default xml-file
-		################################################################################
-
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
 		$osm->addAttribute("generator", OSM_GENERATOR);
@@ -4083,16 +3457,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -4119,6 +3493,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/comment$/", $_SERVER["PHP_SELF"], $matc
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -4134,19 +3509,11 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -4159,17 +3526,11 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 				}
 
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'closed', '" . (isset($_GET["text"]) === false ? "" : str_replace("'", "\'", $_GET["text"])) . "');");
-
 			$resource->query("update note set date_closed = '" . date("Y-m-d\TH:i:s\Z") . "' where (id = " . $id . ");");
-
 			$resource->query("update note set status = 'closed' where (id = " . $id . ");");
 
 			$resource->close();
 			}
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -4194,16 +3555,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -4230,6 +3591,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/close$/", $_SERVER["PHP_SELF"], $matche
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -4245,19 +3607,11 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 
 	if($_SERVER["REQUEST_METHOD"] == "POST")
 		{
-		################################################################################
-		# check login
-		################################################################################
-
 		check_login();
 
 		if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
 			{
 			$resource->query("set names 'utf8';");
-
-			################################################################################
-			# get uid by login
-			################################################################################
 
 			$uid = 0;
 
@@ -4270,17 +3624,11 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 				}
 
 			$resource->query("insert into note_comment (id, uid, date, action, text) values (" . $id . ", " . $uid . ", '" . date("Y-m-d\TH:i:s\Z") . "', 'reopened', '" . (isset($_GET["text"]) === false ? "" : str_replace("'", "\'", $_GET["text"])) . "');");
-
 			$resource->query("update note set date_closed = '' where (id = " . $id . ");");
-
 			$resource->query("update note set status = 'open' where (id = " . $id . ");");
 
 			$resource->close();
 			}
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -4305,16 +3653,16 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 					$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 					if($result_note->status == "open")
-						{
 						$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+					if($result_note->status == "open")
 						$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-						}
 
 					if($result_note->status == "closed")
-						{
 						$note->addChild("date_closed", $result_note->date_closed);
+
+					if($result_note->status == "closed")
 						$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-						}
 
 					$comments = $note->addChild("comments");
 
@@ -4341,6 +3689,7 @@ if(preg_match("/api\/0\.6\/notes\/(\d*)\/reopen$/", $_SERVER["PHP_SELF"], $match
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -4361,20 +3710,12 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 		else
 			$q = $_GET["q"];
 
-		################################################################################
-		# check limit
-		################################################################################
-
 		if(isset($_GET["limit"]) === false)
 			$limit = 100;
 		elseif((isset($_GET["limit"]) === true) && ((strlen($_GET["limit"]) == 0) || (is_numeric($_GET["limit"]) === false) || ($_GET["limit"] < 1) || ($_GET["limit"] > 10000)))
 			exception_limit_range();
 		else
 			$limit = $_GET["limit"];
-
-		################################################################################
-		# check closed
-		################################################################################
 
 		if(isset($_GET["closed"]) === false)
 			$closed = "(note.status = 'open') or ((note.status = 'closed') and (note.date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - (7 * 86400)) . "'))";
@@ -4384,10 +3725,6 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 			$closed = "(note.status = 'open') or (note.status = 'closed')";
 		else
 			$closed = "(note.status = 'open') or ((note.status = 'closed') and (note.date_closed > '" . date("Y-m-d\TH:i:s\Z", time() - ($_GET["closed"] * 86400)) . "'))";
-
-		################################################################################
-		# create default xml-file
-		################################################################################
 
 		$osm = new SimpleXMLElement("<osm />");
 		$osm->addAttribute("version", OSM_VERSION);
@@ -4416,16 +3753,16 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 							$note->addChild("url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id);
 
 							if($result_note->status == "open")
-								{
 								$note->addChild("comment_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/comment");
+
+							if($result_note->status == "open")
 								$note->addChild("close_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/close");
-								}
 
 							if($result_note->status == "closed")
-								{
 								$note->addChild("date_closed", $result_note->date_closed);
+
+							if($result_note->status == "closed")
 								$note->addChild("reopen_url", "http://" . OSM_GENERATOR . "/api/" . OSM_VERSION . "/notes/" . $result_note->id . "/reopen");
-								}
 
 							$comments = $note->addChild("comments");
 
@@ -4456,6 +3793,7 @@ if(preg_match("/api\/0\.6\/notes\/search$/", $_SERVER["PHP_SELF"], $matches) == 
 		$osm = $osm->asXML();
 
 		header("Content-Type: text/xml; charset=utf-8");
+		header("Content-Length: " . strlen($osm));
 
 		print($osm);
 		}
@@ -4513,10 +3851,37 @@ function check_bbox_area($min_lon, $min_lat, $max_lon, $max_lat)
 
 function check_bbox_range($min_lon, $min_lat, $max_lon, $max_lat)
 	{
-	if(($max_lat < $min_lat) || ($max_lon < $min_lon) || ($min_lat < 0 - 90) || ($min_lat > 0 + 90) || ($max_lat < 0 - 90) || ($max_lat > 0 + 90) || ($min_lon < 0 - 180) || ($min_lon > 0 + 180) || ($max_lon < 0 - 180) || ($max_lon > 0 + 180))
+	if($max_lat < $min_lat)
 		return(false);
-	else
-		return(true);
+
+	if($max_lon < $min_lon)
+		return(false);
+
+	if($min_lat < 0 - 90)
+		return(false);
+
+	if($min_lat > 0 + 90)
+		return(false);
+
+	if($max_lat < 0 - 90)
+		return(false);
+
+	if($max_lat > 0 + 90)
+		return(false);
+
+	if($min_lon < 0 - 180)
+		return(false);
+
+	if($min_lon > 0 + 180)
+		return(false);
+
+	if($max_lon < 0 - 180)
+		return(false);
+
+	if($max_lon > 0 + 180)
+		return(false);
+
+	return(true);
 	}
 
 function exception($text)
@@ -4615,31 +3980,5 @@ function exception_zoom_range()
 function exception_id_differs($url_id, $xml_id)
 	{
 	exception("The id in the url (" . $url_id . ") is not the same as provided in the xml (" . $xml_id . ")");
-	}
-
-function find_id($id)
-	{
-	$retval = false;
-
-	if($resource = new mysqli(OSM_HOST, OSM_USER, OSM_PASS, OSM_NAME, OSM_PORT))
-		{
-		$resource->query("set names 'utf8';");
-
-		################################################################################
-		# find id
-		################################################################################
-
-		if($query = $resource->query("select * from changeset where id = " . $id . ";"))
-			{
-			while($result = $query->fetch_object())
-				$retval = ($result->id == $id);
-
-			$query->free_result();
-			}
-
-		$resource->close();
-		}
-
-	return($retval);
 	}
 ?>

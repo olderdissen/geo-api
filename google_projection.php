@@ -5,7 +5,7 @@ class google_projection
 	var $cc = array();
 	var $zc = array();
 
-	function google_projection($levels = 19)
+	function __construct($levels = 19)
 		{
 		foreach(range(0, $levels) as $d)
 			{
